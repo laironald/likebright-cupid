@@ -10,12 +10,12 @@
   <meta property="og:description" content="Play matchmaker and learn who your friends think you should date!" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="http://likebright.com/cupid/" />
-  <meta property="og:image" content="images/likebright-square-big.jpg" />
+  <meta property="og:image" content="http://likebright.com/cupid/images/likebright-square-big.jpg" />
   <meta property="og:site_name" content="likebright" />
   <meta property="fb:admins" content="2203233,211897" />
   
   <meta charset="utf-8">
-  <title>likebright</title>
+  <title>likebright cupid</title>
   <meta name="description" content="">
   <meta name="author" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,7 +59,7 @@
 			<div class="wrapr"><a href="{$fbook.login}"><img src="http://static.ak.fbcdn.net/rsrc.php/zB6N8/hash/4li2k73z.gif"></a></div>
 		{else}
 			<div class="wrapr">
-				<iframe src="http://www.facebook.com/plugins/like.php?app_id=147449738660091&amp;href=http%3A%2F%2Fwww.likebright.com%2Fcupid&amp;send=true&amp;layout=standard&amp;width=200&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=30" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:200px; height:30px;" allowTransparency="true"></iframe>
+				<fb:like href="http://likebright.com/cupid/" send="true" width="300" height="30" show_faces="false" font=""></fb:like>
 			</div>
 		{/if}
 	</div>
@@ -134,6 +134,13 @@
 					'type'				: 'iframe',
 					'titlePosition'		: 'over'
 				});
+			});
+			$(".toptop a.popup").fancybox({
+				'width'				: 600,
+				'height'			: 400,
+				'autoScale'			: true,
+				'type'				: 'iframe',
+				'titlePosition'		: 'over'
 			});
 			{*
 				$("#ppic a").fancybox({
@@ -270,16 +277,17 @@
 		img.onload = function() {
 			$("#ppic").css("height", 13+Math.min(100, 100/img.width*img.height));
 			$("#ppic img").attr("src", match[pos-1]["c"]["picB"]);
-			//$("#ppic a").attr("href", "fetch.php?q=matchlist{if $smarty.get.secret}&secret={$smarty.get.secret}{/if}&uid=" + match[pos-1]["c"]["uid"]);
-			//$("#ppic a").attr("title", match[pos-1]["c"]["name"]+"'s matches");
-			$("#ppic a").attr("href", "http://www.facebook.com/profile.php?id=" + match[pos-1]["c"]["uid"]);
-			$("#ppic a").attr("title", match[pos-1]["c"]["name"]);
+			//$("#ppic a").attr("href", "http://www.facebook.com/profile.php?id=" + match[pos-1]["c"]["uid"]);
+			{if $fbook.me}
+				$("#ppic a").attr("href", "?uid=" + match[pos-1]["c"]["uid"] + "{$url.all}");
+				$("#ppic a").attr("title", "Vote more for " + match[pos-1]["c"]["name"]);
+			{/if}
 		}
 		fader = function(select, data) {
 			if ($(select+" img").attr("src") != data["pic"]) {
 				$(select+" img").attr("src", data["pic"]);
 				$(select+" img").attr("title", data["name"]);
-				$(select+" a").attr("href", "http://www.facebook.com/profile.php?id="+data["uid"]);
+				//$(select+" a").attr("href", "http://www.facebook.com/profile.php?id="+data["uid"]);
 /*			
 				$(select).animate({ opacity: 0.40 }, "fast", function() {
 					$(this).attr("src", data["picB"]);

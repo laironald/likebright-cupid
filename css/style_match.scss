@@ -79,10 +79,7 @@ body {
 	padding: 0;
 	margin: 0 auto;
 	width: #{$maxWidth}px;
-	margin-top: 50px;
 }
-
-
 div.likeTip {
 	padding: 5px 0px;
 	font-size: 8pt;
@@ -158,6 +155,38 @@ div.likeTip {
 	}
 }
 
+.toptop {
+	.friendlist {
+		margin-top: 5px;
+		display: block;
+		img {
+			background: $white;
+			border: $defBorder;
+			padding: 2px;
+			@include rectangle($s: 30);
+			@include opacity(90);
+		}
+		.nostat {
+			@include opacity(70);
+			background: $colBase;
+		}
+	}
+	margin: {
+		left: 15px;
+		top: 15px;
+		bottom: 15px;
+	}
+	font: {
+		size: 8pt;
+		weight: bold;
+	}
+	a {
+		font-weight: normal;
+	}
+	color: $grey3;
+	overflow: hidden;
+	min-height: 30px;
+}
 #header {
 	@include css3d(box-shadow, 0px 4px 4px #d8d8d8);
 	.logo {
@@ -184,12 +213,15 @@ div.likeTip {
 	}
 	.wrap1 {
 		position: relative;
-		width: 650px;
+		width: 575px;
 		float: left;
 	}
 	.wrapr {
-		width: 200px;
+		width: 300px;
 		float: right;
+		img {
+			margin-left: 125px;
+		}
 	}
 	height: 30px;
 	background-color: $colBase;
@@ -475,6 +507,9 @@ div.likeTip {
 		margin-bottom: 10px;
 		color: $grey3;
 		font-size: 8pt;
+		b {
+			font-weight: bolder;
+		}
 	}
 	.title {
 		font: {
@@ -496,10 +531,12 @@ div.likeTip {
 		background: $white;
 		@include opacity(90);
 		@include css3Transition;
-		&:hover {
-			border: 1px solid $kuler3;
-			background: $kuler1;
-		}
+		/*
+			&:hover {
+				border: 1px solid $kuler3;
+				background: $kuler1;
+			}
+		*/
 	}
 	.send {
 		margin-top: 5px;
@@ -561,7 +598,7 @@ div.likeTip {
 			}
 			span {
 				@include abspos($t: 0, $l: 0);
-				color: $grey2;	
+				color: $grey2;
 				font-weight: normal;
 			}
 			position: relative;

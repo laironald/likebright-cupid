@@ -21,6 +21,14 @@ function get_db_conn() {
 function isAssoc ($arr) {
 	return (is_array($arr) && count(array_filter(array_keys($arr),'is_string')) == count($arr));
 }
+function resUser(&$array, $res) {
+	while ($data = mysql_fetch_assoc($res)) {
+		$data["name"] = json_decode($data["name"], true);
+		$data["name"] = $data["name"]["name"];			
+		$array[] = $data;
+	}
+}
+
 function getFriends($uid, $degree="1", $inc=true) {
 	global $session;
 	$mc = new Memcache2;

@@ -9,8 +9,6 @@ $conn = get_db_conn();
 
 /***************************************************************/
 
-
-
 //FACEBOOK
 if ($_GET["logout"]!="") {
 	setcookie('fbs_'.$fappId, "", time()-3600, "/", ".likebright.com");
@@ -86,12 +84,8 @@ if (isset($session)) {
 	if ($fbook["me"]["profile"]["matches"] >= 40 or $_GET["secret"]!="" or $_GET["tvote"]>=40) {
 		/* GET USER's MATCHES */
 		$res = mysql_query("SELECT fid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 ORDER BY R2 DESC LIMIT 6", $conn);
-		$match_your = array();
-		while ($data = mysql_fetch_assoc($res)) {
-			$data["name"] = json_decode($data["name"], true);
-			$data["name"] = $data["name"]["name"];			
-			$match_your[] = $data;
-		}
+		$match_your = array();		
+		resUser($match_your, $res);
 		$smarty->assign("match_your", $match_your);
 	}
 
@@ -100,20 +94,26 @@ if (isset($session)) {
 	$in = "'".implode("','", $friends)."'";	
 	
 	if ($_GET["secret"]!="" and ($uid=="211897" or $uid=="2203233"))
-		$res = mysql_query("SELECT name, uid, pic FROM cupidUser", $conn);
+		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser", $conn);
 	else
-		$res = mysql_query("SELECT name, uid, pic FROM cupidUser WHERE uid in ({$in})", $conn);
-	$frd = array();
-	while ($data=mysql_fetch_assoc($res)) {
-		$data["name"] = json_decode($data["name"], true);
-		$data["name"] = $data["name"]["name"];			
-		$frd["faces"][] = $data;
+		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE uid in ({$in})", $conn);
+
+	if (mysql_num_rows($res) > 0) {
+		$frd = array("faces"=>array(), "extra"=>array());
+		$frd["count"] = mysql_num_rows($res);
+		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE status in ('Single', '') and uid in ({$in})", $conn);
+		$frd["status"] = mysql_num_rows($res);
+		resUser($frd["faces"], $res);
+		shuffle($frd["faces"]);
+		if ($frd["status"]<9) {
+			$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE status not in ('Single', '') and uid in ({$in})", $conn);
+			resUser($frd["extra"], $res);
+			shuffle($frd["extra"]);			
+			$frd["extra"] = array_slice($frd["extra"], 0, 9-$frd["status"]);
+			$frd["faces"] = array_merge($frd["faces"], $frd["extra"]);
+		}
+		$smarty->assign("wings", $frd);
 	}
-		
-	$frd["count"] = count($frd["faces"]);
-	shuffle($frd["faces"]);
-	array_slice($frd["faces"], 0, 24);
-	$smarty->assign("wings", $frd);
 	$url["degree"] = (in_array($_GET["degree"], array("1", "2")))?"&degree={$_GET["degree"]}":"";
 	$url["status"] = (in_array($_GET["status"], array("s", "x")))?"&status={$_GET["status"]}":"";
 	$url["gender"] = (in_array($_GET["gender"], array("m", "f")))?"&gender={$_GET["gender"]}":"";

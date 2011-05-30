@@ -77,7 +77,7 @@
 						</div>
 						<div class="matchlist">
 							{foreach from=$match_your item=m}
-								<a href="http://www.facebook.com/profile.php?id={$m.fid}" target="_blank"><img src="{$m.pic}" title="{$m.name}" /></a>
+								<img src="{$m.pic}" title="{$m.name}" />
 							{/foreach}
 						</div>
 					{else}
@@ -104,7 +104,7 @@
 				</div>
 				{foreach from=$match_tops.male item=m}
 					<div class="imgList">
-						<a target="_blank" href="http://www.facebook.com/profile.php?id={$m.uid}"><img src="{$m.pic}" title="{$m.name}" /></a>
+						<img src="{$m.pic}" title="{$m.name}" />
 						<span>{$m.name|replace:' ':'<br/>'}</span>
 					</div>
 				{foreachelse}
@@ -123,7 +123,7 @@
 				</div>
 				{foreach from=$match_tops.female item=m}
 					<div class="imgList">
-						<a target="_blank" href="http://www.facebook.com/profile.php?id={$m.uid}"><img src="{$m.pic}" title="{$m.name}" /></a>
+						<img src="{$m.pic}" title="{$m.name}" />
 						<span>{$m.name|replace:' ':'<br/>'}</span>
 					</div>
 				{foreachelse}	

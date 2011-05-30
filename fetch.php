@@ -146,6 +146,19 @@ if ($session) {
 		$smarty->assign("matchlistOK", $matchlistOK);		
 		$smarty->display('matchtops.tpl');
 	}
+	elseif ($_GET["q"]=="friendlist") {
+		$match_tops = array();
+		$friends = getFriends($uid);
+		$in = "'".implode("','", $friends)."'";	
+		$res = mysql_query("SELECT uid, pic, name FROM cupidUser WHERE uid in ({$in}) ORDER BY matches DESC LIMIT 50", $conn);
+		while ($data = mysql_fetch_assoc($res)) {
+			$data["name"] = json_decode($data["name"], true);
+			$data["name"] = $data["name"]["name"];
+			$match_tops["item"][] = $data;
+		}		
+		$smarty->assign("match_tops", $match_tops);		
+		$smarty->display('matchtops.tpl');
+	}
 	elseif ($_GET["q"]=="matchbutton") {
 		$matchers = array();
 		$friends = getFriends($uid);
@@ -161,7 +174,7 @@ if ($session) {
 		$smarty->assign("matchers", $matchers);
 		$smarty->display('matchbutton.tpl');
 	}
-		
+	
 	if ($display)
 		echo " ";
 } else {

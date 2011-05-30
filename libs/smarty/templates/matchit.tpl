@@ -6,6 +6,24 @@
 	Check out Slides plugin
 *}
 <div>
+	<div class="grid_7 alpha omega toptop">
+		{if $wings}
+			You have <a class="popup" href="fetch?q=friendlist" title="Your friends on likebright.">{$wings.count} friend{if $wings.count!=1}s{/if}</a> on likebright. 		
+			{if $smarty.get.uid!=""} &nbsp; <a href="?{$url.all}">Vote for Everyone.</a>{/if}
+			<div class="friendlist">
+				{foreach from=$wings.faces item=frd}
+					{if $frd.status=="" || $frd.status=="Single"}				
+						<a href="?uid={$frd.uid}{if $frd.status==""}{$url.degree}&status=x{else}{$url.all}{/if}">
+							<img src="{$frd.pic}" title="Vote more for {$frd.name}" />
+						</a>
+					{else}
+						<img class="nostat" src="{$frd.pic}" title="{$frd.name}" />
+					{/if}
+				{/foreach}
+			</div>
+		{/if}
+	</div>
+	<div class="clear"></div>	
 	<div class="match_base grid_9">
 		{if $match}			
 			<div class="grid_7 push_2 alpha omega">		
@@ -45,20 +63,12 @@
 					<div class="sub grid_2 alpha omega">
 						<div class="grid_2 alpha omega">
 							<div id="pmpic1" {if not $ie}style="margin-right: 4px"{/if}>
-								{if $fbook.me}
-									<a target="_blank" href="http://www.facebook.com/profile.php?id={$match[0].m1.uid}"><img src="{$match[0].m1.pic}" title="{$match[0].m1.name}" /></a>
-								{else}
-									<img src="{$match[0].m1.pic}" title="{$match[0].m1.name}" />
-								{/if}
+								<img src="{$match[0].m1.pic}" title="{$match[0].m1.name}" />
 								<span class="pct"></span>
 								<span class="vte">your vote</span>
 							</div>
 							<div id="pmpic2">
-								{if $fbook.me}
-									<a target="_blank" href="http://www.facebook.com/profile.php?id={$match[0].m2.uid}"><img src="{$match[0].m2.pic}" title="{$match[0].m2.name}" /></a>
-								{else}
-									<img src="{$match[0].m2.pic}" title={$match[0].m2.name}"" />
-								{/if}
+								<img src="{$match[0].m2.pic}" title={$match[0].m2.name}"" />
 								<span class="pct"></span>
 								<span class="vte">your vote</span>
 							</div>
@@ -115,6 +125,8 @@
 			<div id="matchtops">
 				{include file="matchtops.tpl"}
 			</div>
+			{* DECIDED TO GET RID OF THIS FOR NOW *}
+			{*
 			<div class="grid_6 alpha omega divide">
 				<div class="matchlist">			
 					<div class="title">
@@ -136,6 +148,7 @@
 					<div class="divs"></div>
 				</div>
 			</div>
+			*}
 		{else}
 			<div class="grid_6 alpha omega divide">
 				<div class="title">Make your vote count! <a href="{$fbook.login}">Connect with Facebook.</a></div>
@@ -143,6 +156,8 @@
 				<img src="images/famfamfam/icons/group.png" /> Discover which friends are most dateable! <br />
 				<img src="images/famfamfam/icons/heart.png" /> Learn who your friends think you should date! <br />
 				<img src="images/famfamfam/icons/emoticon_smile.png" /> Your votes are annonymous... have fun! <br />
+				<br />
+				<img src="images/famfamfam/icons/shield.png" /> Cupid will never use your data for evil or post anything without asking you first. <b>Ever.</b> <br />
 				<br /><br />
 				<fb:like href="http://likebright.com/cupid/" send="true" width="350" show_faces="true" font=""></fb:like>
 			</div>
@@ -181,6 +196,7 @@
 						<img src="images/famfamfam/icons/new.png" />
 						<img src="images/famfamfam/icons/lock.png" />
 						<img src="images/famfamfam/icons/emoticon_smile.png" />
+						<img src="images/famfamfam/icons/shield.png" />
 					</div>
 				</div>
 			</div>
