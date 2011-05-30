@@ -59,14 +59,6 @@ if (isset($session)) {
 		}
 	*/
 	$fbook = array_merge($fbook, array("oauth" => $oauth));
-	/*
-		$fbook["me"] = curling(array($uid."|friends"  => "https://graph.facebook.com/me/friends?access_token={$oauth}",
-									 $uid."|likes"    => "https://graph.facebook.com/me/likes?access_token={$oauth}"));
-		$fbook["me"]["friends"]  = $fbook["me"][$uid."|friends"];
-		$fbook["me"]["likes"]    = $fbook["me"][$uid."|likes"];
-		unset($fbook["me"][$uid."|friends"]);
-		unset($fbook["me"][$uid."|likes"]);
-	*/
 	$fbook["me"]["user"] = get_user($uid, array("email"=>$fbook["me"]["profile"]["email"], "access_key"=>$oauth, "name"=>$fbook["me"]["profile"]["name"]));
 	
 	$match = match_api(25);

@@ -130,7 +130,7 @@ if ($session) {
 			$match_tops = array("item"=>match_tops($friends, "male", 50));	
 		elseif ($_GET["sex"]=="female")
 			$match_tops = array("item"=>match_tops($friends, "female", 50));
-		$smarty->assign("match_tops", $match_tops);		
+		$smarty->assign("match_tops", $match_tops);
 
 		/* GET USER's MATCHES */
 		if ($fbook["me"]["profile"]["matches"] >= 40) {

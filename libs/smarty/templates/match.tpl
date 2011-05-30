@@ -230,7 +230,7 @@
 			if (vote==0)
 				$.ajax({
 					type: "GET",
-					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
+					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
 					success: function(data) {
 						$("#button").show();
 						$("#button").html(data);
@@ -239,7 +239,7 @@
 			else
 				$.ajax({
 					type: "GET",
-					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m="+match[pos]["m"+vote]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
+					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&m="+match[pos]["m"+vote]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
 					success: function(data) {
 						$("#button").show();
 						$("#button").html(data);

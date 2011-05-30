@@ -14,10 +14,10 @@
 				{foreach from=$wings.faces item=frd}
 					{if $frd.status=="" || $frd.status=="Single"}				
 						<a href="?uid={$frd.uid}{if $frd.status==""}{$url.degree}&status=x{else}{$url.all}{/if}">
-							<img src="{$frd.pic}" title="Vote more for {$frd.name}" />
+							<img class="stat" src="{$frd.pic}" title="Vote more for {$frd.name}" />
 						</a>
 					{else}
-						<img class="nostat" src="{$frd.pic}" title="{$frd.name}" />
+						<img src="{$frd.pic}" title="{$frd.name}" />
 					{/if}
 				{/foreach}
 			</div>
@@ -41,7 +41,7 @@
 						<font class="f1">Who is a better date for</font><br/>
 						<font id="cname" class="f2">{$match[0].c.name}</font>
 						{if !$fbook.me}
-							<br/><font class="f0"><a href="$fbook.login">Connect with Facebook</a> to see your friends.</font>
+							<br/><font class="f0"><a href="{$fbook.login}">Connect with Facebook</a> to see your friends.</font>
 						{/if}
 					</div>
 					<div class="ques">?</div>
