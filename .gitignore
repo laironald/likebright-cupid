@@ -1,0 +1,3 @@
+libs/smarty/cache/*
+libs/smarty/templates_c/*
+css/.sass-cache/*

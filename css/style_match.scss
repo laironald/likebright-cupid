@@ -1,0 +1,611 @@
+/* style_match.scss */
+
+$colBack: #eceff6;
+$colBase: #f7f7f7;
+$colEdge: #cccccc;
+$maxWidth: 965;
+$defBorder: 1px solid $colEdge;
+
+/* Kuler Template */
+$kuler1: #E3EDDA;
+$kuler2: #AFDE41;
+$kuler3: #19B3CD;
+$kuler4: #1F86A1; 
+$kuler5: #0A3D57;
+
+/* greys */
+$black: #000000;
+$grey1: #333333;
+$grey2: #666666;
+$grey3: #999999;
+$grey4: #CCCCCC;
+$white: #FFFFFF;
+
+/* Facebook Colors */
+$fbookb: #3b5998;
+$fbookbb: #eceff6;
+$fbookbe: #d4dae8;
+$fbookyb: #fff9d7;	
+$fbookye: #e2c822;	
+$fbookrb: #ffebe8;
+$fbookre: #dd3c10;	
+
+/* mixin */
+
+@mixin css3d($key, $value) {
+	 -moz-#{$key}: $value;
+	   -o-#{$key}: $value;
+  -webkit-#{$key}: $value;
+	  -ms-#{$key}: $value;
+		  #{$key}: $value;
+}
+@mixin css3Transition($time: 0.3s, $type: ease-out) {
+	@include css3d(transition, all $time $type);
+}
+@mixin opacity($alpha: 100) {
+	opacity: $alpha / 100;
+	filter: alpha(opacity=#{$alpha});
+}
+@mixin abspos($l: auto, $t: auto, $r: auto, $b: auto) {
+	position: absolute;
+	@if $l != auto { left:   #{$l}px; }
+	@if $t != auto { top:    #{$t}px; }
+	@if $r != auto { right:  #{$r}px; }
+	@if $b != auto { bottom: #{$b}px; }
+}
+@mixin rectangle($w: auto, $h: auto, $s: auto) {
+	@if $w != auto { width:  #{$w}px; }
+	@if $h != auto { height: #{$h}px; }
+	@if $s != auto {
+		width:  #{$s}px;
+		height: #{$s}px;
+	}
+}
+
+
+/**** CSS ****/
+
+a {
+	text-decoration: none;
+	cursor: pointer;
+}
+body {
+	margin: 0px;
+	background-color: $colBack;
+	height: 100%;
+}
+#container {
+	position: relative;
+	padding: 0;
+	margin: 0 auto;
+	width: #{$maxWidth}px;
+	margin-top: 50px;
+}
+
+
+div.likeTip {
+	padding: 5px 0px;
+	font-size: 8pt;
+	img {
+		@include rectangle($w: 50);
+		float: left;
+		margin-right: 5px;
+	}
+	.likeDetail {
+		padding: 5px;
+		float: left;
+		width: 130px;
+	}
+	.icon {
+		width: 16px;
+	}
+	.ytube {
+		margin-top: 10px;
+	}
+}
+
+.logo {
+	float: left;
+	padding-right: 20px;
+	&:hover {
+		cursor: pointer;
+	}
+}		
+
+#profileLoad span {
+	font-size: 7pt;
+	color: #999;
+	margin-left: 5px;
+	height: 30px;
+	padding-down: 5px;
+	display: inline-block;
+	vertical-align: middle;
+}
+#status {
+	display: inline-block;
+}
+
+/*****************************************/
+
+.boxy {
+	margin: 2px;
+	margin-bottom: 6px;
+	padding: {
+		top: 4px;
+		right: 20px;
+	}
+	float: left;
+	display: block-inline;
+	a {
+		@include css3d(border-radius, 10px);
+		@include css3d(box-shadow, 0 1px 2px #999);
+		background-color: #ddd;
+		color: #666;
+		padding: 4px 10px;
+		font-size: 8pt;
+		margin-top: 4px;
+		text-decoration: none;
+		img {
+			height: 10px;
+		}
+		&:hover {
+			color: #333;
+			@include opacity;
+		}
+	}
+	a.select {
+		background-color: #b4da98;
+	}
+}
+
+#header {
+	@include css3d(box-shadow, 0px 4px 4px #d8d8d8);
+	.logo {
+		position: relative;
+		@include rectangle($h: 45, $w: 102);
+		display: inline-block;
+		img {
+			@include abspos($t: -8, $l: 0);
+			@include rectangle($h: 45, $w: 102);
+		}
+		.beta {
+			@include abspos($b: 10, $r: 22);
+			font: {
+				size: 8px;
+				face: Tahoma;
+			}
+			color: $grey3;
+			z-index: 10;
+		}
+	}
+	.wrapper {
+		@include rectangle($h: 60, $w: $maxWidth);
+		margin: 0 auto;
+	}
+	.wrap1 {
+		position: relative;
+		width: 650px;
+		float: left;
+	}
+	.wrapr {
+		width: 200px;
+		float: right;
+	}
+	height: 30px;
+	background-color: $colBase;
+	width: 100%;
+	padding: 10px 0px;
+	margin: 0px;
+	z-index: 10;
+}
+
+.match_base {
+	.compare {
+		.select {
+			cursor: pointer;
+			position: relative;
+			display: inline-block;
+			div {
+				@include css3Transition;
+			}			
+			img {
+				@include css3Transition;
+				display: block;
+				margin: 0 auto;
+				width: 190px;
+			}	
+			.white {
+				@include opacity(70);
+				@include rectangle($h: 335, $w: 190);
+				cursor: normal;
+				position: relative;
+				display: block;
+				padding: 2px;
+				border: $defBorder;
+				background-color: $colBase;
+				overflow: hidden;
+			}
+			.black, .blacktitle {
+				@include opacity(0);
+				display: block;
+			}
+			.black {
+				@include abspos($l: 0, $r: 0, $t: 0, $b: 0);
+				background-color: $kuler2;
+			}
+			.blacktitle {
+				@include abspos($l: 0, $r: 0, $t: 30);
+				text-align: center;
+				font: {
+					size: 30px;
+					family: Arial, san-serif;
+					weight: bolder;
+				}
+				color: $kuler1;
+				text-shadow: 1px 1px 3px $kuler3;
+				letter-spacing: -1px;
+			}
+			.name {
+				@include abspos($b: 2, $l: 4);
+				@include opacity(80);
+				background: $colBase;
+				width: 178px;
+				padding: 4px 4px;
+				text-align: center;
+				font-size: 16px;
+				color: $grey3;
+			}
+		}
+		.selectB {
+			.white{
+				@include opacity;
+				cursor: pointer;
+			}
+			&:hover .white {
+				@include css3d(box-shadow, 1px 1px 3px $grey3);
+				border: 1px solid $kuler4;
+			}
+			&:hover .black {
+				@include opacity(60);
+			}
+			&:hover .blacktitle {
+				@include opacity;
+			}
+		}
+	}
+	.header {
+		@include css3d(box-shadow, 0px 1px 1px $grey3);
+		margin-bottom: 10px;
+		width: 350px;
+		min-height: 58px;
+		border: $defBorder;
+		background-color: $kuler1;
+		padding: 5px 5px;
+		color: $kuler3;
+		overflow: hidden;
+		font-family: Arial, san-serif;
+		.profile {
+			display: inline-block;
+			position: relative;
+		}
+		div.ques {
+			display: inline-block;
+			overflow: hidden;
+			vertical-align: top;
+			width: 35px;
+			padding-left: 4px;
+			font-size: 60px;
+			line-height: 60px;
+			text-shadow: 1px 1px 2px #999;
+		}
+		div.text {
+			display: inline-block;
+			overflow: hidden;
+			vertical-align: top;
+			padding: 3px {
+				top: 6px;
+			}
+			width: 230px;
+		}
+		.img {
+			@include rectangle($s: 50);
+			padding: 2px;
+			background-color: $colBase;
+			border: $defBorder;
+			margin-right: 5px;
+		}
+		.imglock {
+			background-color: $fbookyb;
+			border: 1px solid $fbookye;
+		}
+		.f0 {
+			font-size: 8pt;
+			a {
+				color: $fbookb;
+			}
+			color: $kuler4;
+			line-height: 6px;
+		}
+		.f1 {
+			font-size: 18px;
+			line-height: 18px;
+		}
+		.f2 {
+			font-size: 25px;
+			word-wrap: break-word;
+			text-shadow: 1px 1px 1px #999;
+		}
+	}
+	.next {
+		@include abspos($t: 3, $r: 0);
+		@include css3Transition;
+		@include opacity(60);
+		cursor: pointer;
+		width: 25px; 
+		&:hover {
+			@include opacity;
+		}
+	}
+	.prev {
+		@include css3Transition;
+		display: none;
+		.main, .sub {
+			vertical-align: top;
+			border: $defBorder;
+			display: block;
+			background-color: $colBase;
+			width: 100%;
+			position: relative;
+			margin-bottom: 5px;
+			overflow: hidden;
+			img {
+				max: {
+					width: 100px;
+					height: 100px;
+				}
+				background-color: $colBase;
+				margin: 0 auto;
+			}
+			padding: 2px {
+				bottom: 4px;
+			}
+		}
+		.button {
+			display: block;
+			padding: 2px;
+			a {
+				@include css3d(border-radius, 10px);
+				@include css3d(box-shadow, 0 1px 2px #999);
+				text: {
+					align: center;
+					decoration: none;
+				}
+				&:hover {
+					color: $grey1;
+					@include opacity;
+				}
+				border: $defBorder;
+				background: #dfdfdf;
+				display: block;
+				color: #666;
+				padding: 4px 10px;
+				font-size: 8pt;
+				margin-top: 4px;
+			}
+		}
+		.main {
+			@include css3Transition;
+			span {
+				display: block;
+				letter-spacing: 1px; 
+				text-align: center; 
+				color: $grey3;
+				margin: 2px auto 3px auto;
+				font: {
+					size: 6pt; 
+					weight: bold;
+					family: Tahoma; 
+				}
+			}
+			img {
+				display: block;
+			}
+		}
+		.sub {
+			img {
+				vertical-align: top;
+				max-width: 48px;
+				margin: 0px;
+			}
+			div {
+				display: inline-block;
+				position: relative;
+				margin: 0px;
+				float: left;
+			}
+			span {
+				font: {
+					size: 7pt; 
+					family: Tahoma; 
+				}
+				display: block;
+				text-align: center;
+			}
+			span.pct {
+				@include opacity(80);
+				font: {
+					size: 24px;
+					weight: bold;
+					family: Arial;
+				}
+				width: 48px;
+				background-color: $fbookb;
+				color: $colBase;
+				padding: 1px 0px;
+			}
+			span.scr {
+				margin-top: 4px;
+				color: $grey3;	
+			}
+			span.vte {
+				@include opacity(80);
+				background-color: $colEdge;
+				color: $kuler5;
+				width: 48px;
+				padding: 2px 0px;
+			}
+		}
+		.votemore {
+			a {
+				font-size: 7pt; 
+				color: $fbookb;
+			}
+			text-align: center; 
+			line-height: 10px;
+			margin-bottom: 4px;
+		}
+	}
+}
+
+.user_status {
+	.divide {
+		border: $defBorder;
+		background: $colBase;
+		padding: 5px;
+		margin-bottom: 10px;
+		color: $grey3;
+		font-size: 8pt;
+	}
+	.title {
+		font: {
+			size: 8pt;
+			weight: bold;
+		}
+		margin: 5px 0px;
+		color: $grey3;
+	}
+	.matchlist {
+		padding: 0px 3px;
+	}
+	.matchlist img,
+	.tops .imgList img {
+		@include rectangle($s: 30);
+		display: inline-block;
+		padding: 2px;
+		border: $defBorder;
+		background: $white;
+		@include opacity(90);
+		@include css3Transition;
+		&:hover {
+			border: 1px solid $kuler3;
+			background: $kuler1;
+		}
+	}
+	.send {
+		margin-top: 5px;
+		.divs {
+			display: inline-block;
+			font-size: 8pt;
+			.send {
+				@include rectangle($w: 60, $h: 22);
+				display: inline-block;
+			}
+		}
+	}
+	.imgList {
+		span {
+			display: inline-block;
+			font-size: 8pt;
+			color: $grey3;
+			min-height: 30px;
+			width: 100px;
+			vertical-align: top;
+			padding: 1px;
+			overflow: hidden;
+		}
+	}
+	.title {
+		a {
+			text-decoration: none;
+			font-weight: normal;
+			color: $fbookb;
+		}
+	}
+	.welcome {
+		.profile {
+			@include rectangle($s: 50);
+			padding: 2px;
+			border: $defBorder;
+			background-color: $white;
+			margin: 0 auto;
+		}
+		.main {
+			display: inline-block;
+			vertical-align: top;
+			padding: 2px 5px;
+			color: $grey1;
+			font-size: 8pt;
+			span {
+				color: $grey2;
+				padding-left: 3px;
+				font-weight: bold;
+			}
+		}
+		.statusbar {
+			@include css3d(box-shadow, 0 1px 1px #999);
+			@include css3d(border-radius, 10px);
+			div {
+				background: $kuler2;
+				height: 12px;
+				@include css3d(border-radius, 10px); 
+			}
+			span {
+				@include abspos($t: 0, $l: 0);
+				color: $grey2;	
+				font-weight: normal;
+			}
+			position: relative;
+			background: $kuler1;
+			border: $defBorder;
+			padding: 1px; 
+			width: 200px;
+			margin: 5px 0px;
+		}
+	}
+	.footer {
+		padding: 0px 8px;
+		.about {
+			font-size: 8pt;
+			display: none;
+			margin-top: 5px;
+			padding: 10px 0px;
+			border-top: $defBorder;
+			.famfamfam {
+				display: inline-block;
+				border: $defBorder;
+				margin: 2px;
+				padding: 3px;
+				background-color: $colBase;
+				img {
+					padding: 1px;
+				}
+			}
+		}
+	}
+	.social {
+		display: inline-block;		
+		margin-right: 10px;
+	}
+	.text {
+		display: inline-block;
+		font-size: 8pt;
+		vertical-align: top;
+	}
+}
+
+	
+.box_round {
+	border: $defBorder;
+	@include css3d(border-radius, 5px);
+	@include css3d(box-shadow, 1px 1px 2px #ccc);
+}

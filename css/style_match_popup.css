@@ -1,0 +1,31 @@
+body { margin-bottom: 35px; }
+a {
+	color: #3b5998;
+	text-decoration: none;
+}
+div { 
+	padding: 2px; 
+	border-bottom: 1px solid #cccccc; 
+	padding-top: 4px;
+	position: relative;
+}
+div img {
+	width: 50px;
+	height: 50px;
+	background-color: #f7f7f7;
+}
+div:hover { background-color: #E3EDDA; }
+div span { 
+	display: inline-block; 
+	padding: 10px;
+	vertical-align: top; 
+	font-family: Arial; 
+	font-size: 10pt; 
+	color: #333; 
+}
+div span.s2 {
+	font-weight: bold;
+	font-size: 15pt;
+	float: right;
+	text-shadow: 1px 1px 3px #888; 
+}
