@@ -1,13 +1,9 @@
-import cairo, urllib, Image, MySQLdb, sys
+import cairo, math, urllib, Image, MySQLdb, sys
 sys.path.append("/var/www")
 from cupid_config import *
 from cStringIO import StringIO
 
-surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, 102, 102)
-ctx = cairo.Context (surface)
-ctx.scale (1, 1)
 defImage = "../../images/likebright-square.png"
-
 def fetchImg(url):
 	theimg  = StringIO()
 	thedata = StringIO()
@@ -20,24 +16,27 @@ def fetchImg(url):
 	im.save(thedata, format="png")
 	thedata.seek(0)
 	return thedata
-
-def drawBlock(id, x, y):
-	image = cairo.ImageSurface.create_from_png (id=="0" and defImage or fetchImg("http://graph.facebook.com/"+id+"/picture"))
-	ctx.set_source_surface (image, x, y)
-	ctx.paint()
-
+	
 if len(sys.argv)==2:
 	key = sys.argv[1]
-	ids = sys.argv[1].split(",")
-	drawBlock(ids[0], 0, 0)
-	drawBlock(ids[1], 52, 0)
-	drawBlock(ids[2], 0, 52)
-	drawBlock(ids[3], 52, 52)
+	ids = sys.argv[1].split("x")
+	
+	p = 2
+	w = 50
+	d = int(math.ceil(len(ids)**0.5))
+	surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, d*(w+p)-p, d*(w+p)-p)
+	ctx = cairo.Context (surface)
+	ctx.scale (1, 1)
+	
+	for i, x in enumerate(ids):
+		if x!="":
+			image = cairo.ImageSurface.create_from_png (x=="0" and defImage or fetchImg("http://graph.facebook.com/"+x+"/picture"))
+			ctx.set_source_surface (image, (i%d)*(w+p), (i/d)*(w+p))
+			ctx.paint()
 		
 	thedata = StringIO()
 	surface.write_to_png (thedata)
 
 	db = MySQLdb.connect(db_ip, db_user, db_pass, db_name)
 	c = db.cursor()
-
-c.execute("REPLACE INTO cupidImage (uid, image) VALUES (%s, %s)", (key, thedata.getvalue()))
+	c.execute("REPLACE INTO cupidImage (uid, image) VALUES (%s, %s)", (key, thedata.getvalue()))

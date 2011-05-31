@@ -126,21 +126,14 @@
 	$(document).ready(function() {
 		match = $.parseJSON('{$matchJSON}');
 		{if $fbook.me}
-			$(".title a").live("mouseover", function(event) {
-				$(".title a").fancybox({
+			$("a.popup").live("mouseover", function(event) {
+				$("a.popup").fancybox({
 					'width'				: 600,
 					'height'			: 400,
 					'autoScale'			: true,
 					'type'				: 'iframe',
 					'titlePosition'		: 'over'
 				});
-			});
-			$(".toptop a.popup").fancybox({
-				'width'				: 600,
-				'height'			: 400,
-				'autoScale'			: true,
-				'type'				: 'iframe',
-				'titlePosition'		: 'over'
 			});
 			{*
 				$("#ppic a").fancybox({
