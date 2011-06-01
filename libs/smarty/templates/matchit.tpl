@@ -155,17 +155,29 @@
 				<img src="images/famfamfam/icons/help.png" /> Play matchmaker with your Facebook friends! <br />
 				<img src="images/famfamfam/icons/group.png" /> Discover which friends are most dateable! <br />
 				<img src="images/famfamfam/icons/heart.png" /> Learn who your friends think you should date! <br />
-				<img src="images/famfamfam/icons/emoticon_smile.png" /> Your votes are annonymous... have fun! <br />
-				<br />
-				<img src="images/famfamfam/icons/shield.png" /> Cupid will never use your data for evil or post anything without asking you first. <b>Ever.</b> <br />
-				<br /><br />
-				<fb:like href="http://likebright.com/cupid/" send="true" width="350" show_faces="true" font=""></fb:like>
+				<img src="images/famfamfam/icons/shield.png" /> Your votes are anonymous... have fun! <br />
+				<div class="bigfont">
+					We will <b>never post</b> anything<br/>without asking you first. <b>Ever.</b> 
+				</div>
+				<fb:like href="http://likebright.com/cupid/" send="true" width="350" show_faces="false" font=""></fb:like>
+			</div>
+			<div class="grid_6 alpha omega divide">
+				<div class="video">
+					<center>
+					What is likebright?<br/>
+					<a class="popup" href="http://www.youtube.com/v/XkfFJjdBAU8?autoplay=1">
+						<img class="main" src="images/video-prompt.png" />
+						<img class="play" src="images/play-button.png" />
+					</a>
+					</center>
+				</div>
 			</div>
 		{/if}
 			<div class="grid_6 alpha omega footer">
 				<div class="social">
 					<a target="_blank" href="https://www.facebook.com/pages/cupid/220089028018633"><img src="images/icon-dock/facebook.png" title="Like!"></a>
 					<a target="_blank" href="http://www.twitter.com/likebright1"><img src="images/icon-dock/twitter-2.png" title="Follow!"></a>
+					<a target="_blank" href="http://www.youtube.com/likebright1"><img src="images/icon-dock/youtube.png" title="Watch!"></a>
 					<a target="_blank" href="https://github.com/laironald/likebright-cupid"><img src="images/icon-dock/github.png" title="Fork!"></a>
 				</div>
 				<div class="text">
@@ -195,7 +207,6 @@
 						<img src="images/famfamfam/icons/heart.png" />
 						<img src="images/famfamfam/icons/new.png" />
 						<img src="images/famfamfam/icons/lock.png" />
-						<img src="images/famfamfam/icons/emoticon_smile.png" />
 						<img src="images/famfamfam/icons/shield.png" />
 					</div>
 				</div>

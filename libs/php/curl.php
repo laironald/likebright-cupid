@@ -24,7 +24,8 @@ function isAssoc ($arr) {
 function resUser(&$array, $res) {
 	while ($data = mysql_fetch_assoc($res)) {
 		$data["name"] = json_decode($data["name"], true);
-		$data["name"] = $data["name"]["name"];			
+		$data["name"] = $data["name"]["name"];
+		$data["status"] = ($data["status"]==null)?"":$data["status"];
 		$array[] = $data;
 	}
 }
@@ -279,15 +280,40 @@ function parseJSON($k, $v) {
 		}
 	else if ($keyd[1]=="fql_profile") 
 	{
+		$friends = getFriends($keyd[0]);
 		$fqli = array();
 		mysql_query("DELETE FROM cupidFriends WHERE uid='{$keyd[0]}'", $conn);
 		foreach($v as $fql)
-			if ($keyd[0]!=$fql["uid"])
+			if ($keyd[0]!=$fql["uid"]) {
 				$fqli[] = sprintf("('{$keyd[0]}', '{$fql["uid"]}', '{$fql["sex"]}', '{$fql["pic_square"]}', '%s', '%s', '%s')", 
 					mysql_real_escape_string($fql["relationship_status"]),
 					mysql_real_escape_string(json_encode(array("first_name"=>$fql["first_name"], "middle_name"=>$fql["middle_name"], "last_name"=>$fql["last_name"],	"name"=>$fql["name"]))),
 					mysql_real_escape_string(json_encode($fql)));
-			else {
+				
+				/* FIND YOUR FRIENDS ON LIKEBRIGHT AND UPDATE THOSE */
+				/* WORK ON THIS PIECE LATER */
+				/*
+				if (in_array($fql["uid"], $friends)) {
+					mysql_query(sprintf("UPDATE cupidUser 
+											SET sex='{$fql["sex"]}', 
+												pic='{$fql["pic_square"]}', 
+												status='%s', name='%s', json='%s' 
+										  WHERE uid='{$fql["uid"]}'",
+							mysql_real_escape_string($fql["relationship_status"]),
+							mysql_real_escape_string(json_encode(array("first_name"=>$fql["first_name"], "middle_name"=>$fql["middle_name"], "last_name"=>$fql["last_name"], "name"=>$fql["name"]))),
+							mysql_real_escape_string(json_encode($fql))), $conn);
+					
+					mysql_query(sprintf("UPDATE cupidFriends
+											SET sex='{$fql["sex"]}', 
+												pic='{$fql["pic_square"]}', 
+												status='%s', name='%s', json='%s' 
+										  WHERE fid='{$fql["uid"]}'",
+							mysql_real_escape_string($fql["relationship_status"]),
+							mysql_real_escape_string(json_encode(array("first_name"=>$fql["first_name"], "middle_name"=>$fql["middle_name"], "last_name"=>$fql["last_name"], "name"=>$fql["name"]))),
+							mysql_real_escape_string(json_encode($fql))), $conn);
+				}
+				*/
+			} else {
 				mysql_query("INSERT IGNORE INTO cupidUser (uid) VALUES ('{$keyd[0]}')", $conn);
 				mysql_query(sprintf("UPDATE cupidUser 
 										SET email='{$fql["email"]}',
@@ -296,7 +322,7 @@ function parseJSON($k, $v) {
 											status='%s', name='%s', json='%s' 
 									  WHERE uid='{$keyd[0]}'",
 					mysql_real_escape_string($fql["relationship_status"]),
-					mysql_real_escape_string(json_encode(array("first_name"=>$fql["first_name"], "middle_name"=>$fql["middle_name"], "last_name"=>$fql["last_name"],	"name"=>$fql["name"]))),
+					mysql_real_escape_string(json_encode(array("first_name"=>$fql["first_name"], "middle_name"=>$fql["middle_name"], "last_name"=>$fql["last_name"], "name"=>$fql["name"]))),
 					mysql_real_escape_string(json_encode($fql))), $conn);
 			}
 
@@ -509,29 +535,41 @@ function usrLoaded($uid) {
 
 function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 	global $uid;
-	$conn = get_db_conn();
-	$myFriends = getFriends($uid);
-	if ($friends == NULL)
-		$friends = getFriends($uid, $_GET["degree"], false);
-	$in = "'".implode("','", $friends)."'";	
+	$degree = ($_GET["degree"]=="2")?"2":"1";
+	$status = ($status==NULL)?$_GET["status"]:$status;
+	$status = ($status=="x")?"x":"s";
 	
-	if ($status==NULL)
-		$status = $_GET["status"];
-	
-	if ($status=="x")
-		//$status = "status in ('Single', '')";
-		$status = "status in ('')";
-	else
-		$status = "status='Single'";
-	
-	//$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND P>=50 AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
-	$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
-	$ui = array();
-	while ($datum = mysql_fetch_assoc($res)) {
-		$n = json_decode($datum["name"], true);
-		$ui[] = array("name"=>$n["name"], "uid"=>$datum["uid"], "pic"=>$datum["pic"], "matchlist"=>in_array($datum["uid"], $myFriends));
+	$mc = new Memcache2;
+	$mc->connect('localhost', 11211);
+	$mckey = "{$uid}|match_tops|{$sex}|{$degree}|{$status}|{$limit}";
+	$mcval = $mc->toggle($mckey);
+
+	//$mc->flush();
+	if ($mcval != false) {
+		$ui = json_decode($mcval, true);
+	} else {
+		$conn = get_db_conn();
+		$myFriends = getFriends($uid);
+		if ($friends == NULL)
+			$friends = getFriends($uid, $degree, false);
+		$in = "'".implode("','", $friends)."'";	
+		
+		if ($status=="x")
+			//$status = "status in ('Single', '')";
+			$status = "status in ('')";
+		else
+			$status = "status='Single'";
+		
+		//$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND P>=50 AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
+		$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
+		$ui = array();
+		while ($datum = mysql_fetch_assoc($res)) {
+			$n = json_decode($datum["name"], true);
+			$ui[] = array("name"=>$n["name"], "uid"=>$datum["uid"], "pic"=>$datum["pic"], "matchlist"=>in_array($datum["uid"], $myFriends));
+		}
+		$mc->toggle($mckey, json_encode($ui), 15*60); //cache most dateable guys for 15 minutes
 	}
-	return $ui;	
+	return $ui;
 }
 function match_api($num=50, $login=true) {
 	global $uid;
@@ -567,9 +605,9 @@ function match_api($num=50, $login=true) {
 												from  user 
 											   where  uid in ({$in}, '{$uid}')", 
 					"access_token"=>$oauth, "format"=>"json"))
-			), $force=false);
+			), $force=true);
 		
-		if ($uid=="2203233") {		
+		if ($uid=="2203233") {
 			/*
 				$val2 = curling(array(
 					"{$uid}|fql_minilike"=>  

@@ -141,6 +141,7 @@ class meCupid {
 	public $scr;
 	public $uid;
 	public $user = array();
+	public $friends;
 	
 	public function meCupid($uid, $scr=null, $data=null) {
 		if ($data==null)
@@ -158,6 +159,7 @@ class meCupid {
 		$this->user = $data;
 		$this->scr = $scr;
 		$this->uid = $uid;
+		$this->friends = getFriends($uid);
 	}
 	public function addCnt() {
 		$conn = get_db_conn();
@@ -165,6 +167,26 @@ class meCupid {
 		$this->user["profile"]["matches"]++;
 		mysql_query(sprintf("UPDATE cupidUser SET matches=matches+1, config='%s' WHERE uid={$this->uid}", 
 			json_encode($this->user["profile"]["config"])), $conn);		
+	}
+	public function top_matches($uid=NULL, $LIMIT=6) {
+		if ($uid==NULL)
+			$uid = $this->uid;
+			
+		$mc = new Memcache2;
+		$mc->connect('localhost', 11211);
+		$mckey = "{$uid}|top_matches|{$LIMIT}";
+		$mcval = $mc->toggle($mckey);
+		//$mc->flush();
+		if ($mcval != false) {
+			$match_your = json_decode($mcval, true);
+		} else {
+			$conn = get_db_conn();
+			$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
+			$match_your = array();	
+			resUser($match_your, $res);		
+			$mc->toggle($mckey, json_encode($match_your), 15*60);
+		}			
+		return $match_your;
 	}
 }
 

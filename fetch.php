@@ -133,16 +133,8 @@ if ($session) {
 		$smarty->assign("match_tops", $match_tops);
 
 		/* GET USER's MATCHES */
-		if ($fbook["me"]["profile"]["matches"] >= 40) {
-			$res = mysql_query("SELECT fid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 ORDER BY R2 DESC LIMIT 6", $conn);
-			$match_your = array();
-			while ($data = mysql_fetch_assoc($res)) {
-				$data["name"] = json_decode($data["name"], true);
-				$data["name"] = $data["name"]["name"];
-				$match_your[] = $data;
-			}
-			$smarty->assign("match_your", $match_your);
-		}		
+		if ($fbook["me"]["profile"]["matches"] >= 40)
+			$smarty->assign("match_your", $meCupid->top_matches());
 		$smarty->assign("matchlistOK", $matchlistOK);		
 		$smarty->display('matchtops.tpl');
 	}

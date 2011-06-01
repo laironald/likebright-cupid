@@ -73,13 +73,8 @@ if (isset($session)) {
 		$smarty->assign("match_tops", $match_tops);
 	}
 	
-	if ($fbook["me"]["profile"]["matches"] >= 40 or $_GET["secret"]!="" or $_GET["tvote"]>=40) {
-		/* GET USER's MATCHES */
-		$res = mysql_query("SELECT fid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 ORDER BY R2 DESC LIMIT 6", $conn);
-		$match_your = array();		
-		resUser($match_your, $res);
-		$smarty->assign("match_your", $match_your);
-	}
+	if ($fbook["me"]["profile"]["matches"] >= 40 or $_GET["secret"]!="" or $_GET["tvote"]>=40)
+		$smarty->assign("match_your", $meCupid->top_matches());
 
 	//friends!  friends!
 	$friends = getFriends($uid);

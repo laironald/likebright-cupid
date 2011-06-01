@@ -514,6 +514,37 @@ div.likeTip {
 		b {
 			font-weight: bolder;
 		}
+		.video {
+			margin: 10px;
+			color: $kuler4;
+			font-size: 10pt;
+			font-weight: bold;
+			a {
+				position: relative;
+				display: inline-block;
+				img.main {
+					@include css3d(border-radius, 10px);
+					@include css3d(box-shadow, 0 1px 1px #999);
+					margin-top: 7px; 
+					width: 200px;
+				}			
+				img.play {
+					@include abspos($t: 40, $l: 60);
+					@include css3Transition;
+					@include opacity(40);
+					width: 80px;
+					&:hover {
+						@include opacity(70);
+					}
+				}
+			}
+		}
+		.bigfont {
+			color: $grey2;
+			font-size: 18px; 
+			display: block; 
+			padding: 15px 20px;		
+		}
 	}
 	.title {
 		font: {
