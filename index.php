@@ -85,6 +85,7 @@ if (isset($session)) {
 	else
 		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE uid in ({$in})", $conn);
 
+	/* //HIDE WINGS 
 	if (mysql_num_rows($res) > 0) {
 		$frd = array("faces"=>array(), "extra"=>array());
 		$frd["count"] = mysql_num_rows($res);
@@ -96,12 +97,13 @@ if (isset($session)) {
 			$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE status not in ('Single', '') and uid in ({$in})", $conn);
 			resUser($frd["extra"], $res);
 			shuffle($frd["extra"]);			
-			$frd["extra"] = array_slice($frd["extra"], 0, 9-$frd["status"]);
 			$frd["faces"] = array_merge($frd["faces"], $frd["extra"]);
-		}
+		} 
+		$frd["faces"] = array_slice($frd["faces"], 0, 9);
 		$smarty->assign("wings", $frd);
 	}
-	$url["degree"] = (in_array($_GET["degree"], array("1", "2")))?"&degree={$_GET["degree"]}":"";
+	*/
+	$url["degree"] = (in_array($_GET["degree"], array("0", "1", "2")))?"&degree={$_GET["degree"]}":"";
 	$url["status"] = (in_array($_GET["status"], array("s", "x")))?"&status={$_GET["status"]}":"";
 	$url["gender"] = (in_array($_GET["gender"], array("m", "f")))?"&gender={$_GET["gender"]}":"";
 	$url["all"] = "{$url["degree"]}{$url["status"]}{$url["gender"]}";

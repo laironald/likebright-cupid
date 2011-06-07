@@ -94,10 +94,10 @@
 		{if $matchC >= #unlock1# || $secretOK}
 			<div class="grid_3 alpha tops">
 				<div class="title">
-					{assign var="cTitle" value="The most dateable {if $smarty.get.status!="x"}single{/if} guys{if $smarty.get.degree=="2"} in your friends of friends{/if}{if $smarty.get.status=="x"} with unknown relationship status{/if}."}
+					{assign var="cTitle" value="The most matched {if $smarty.get.status!="x"}single{/if} guys{if $smarty.get.degree=="2"} in your friends of friends{/if}{if $smarty.get.status=="x"} with unknown relationship status{/if}."}
 					{assign var="mgendr" value=$match_tops.male}
 					{if $matchC == #unlock1#}<img src="images/famfamfam/icons/new.png" />{/if}
-					Most dateable guys<br/>
+					Most matched guys<br/>
 					{if $mgendr}
 						<a target="_blank" href="http://www.facebook.com/dialog/feed?app_id=189260257772056&to={$guid}&redirect_uri=http%3A%2F%2Flikebright.com%2Fcupid%2Fclose.html&link=http://likebright.com/cupid/&name={$cTitle}&caption=Congrats to {$mgendr[0].name}, {$mgendr[1].name}, {$mgendr[2].name}, {$mgendr[3].name} and {$mgendr[4].name}.&picture=http://likebright.com/cupid/libs/php/image.php?q={$mgendr[0].uid}x0x{$mgendr[1].uid}x0x{$mgendr[2].uid}x0x{$mgendr[3].uid}x0x{$mgendr[4].uid}">
 							post to wall
@@ -120,10 +120,10 @@
 			</div>
 			<div class="grid_3 omega tops">
 				<div class="title">
-					{assign var="cTitle" value="The most dateable {if $smarty.get.status!="x"}single{/if} girls{if $smarty.get.degree=="2"} in your friends of friends{/if}{if $smarty.get.status=="x"} with unknown relationship status{/if}."}
+					{assign var="cTitle" value="The most matched {if $smarty.get.status!="x"}single{/if} girls{if $smarty.get.degree=="2"} in your friends of friends{/if}{if $smarty.get.status=="x"} with unknown relationship status{/if}."}
 					{assign var="mgendr" value=$match_tops.female}
 					{if $matchC == #unlock1#}<img src="images/famfamfam/icons/new.png" />{/if}
-					Most dateable girls<br/>
+					Most matched girls<br/>
 					{if $mgendr}
 						<a target="_blank" href="http://www.facebook.com/dialog/feed?app_id=189260257772056&to={$guid}&redirect_uri=http%3A%2F%2Flikebright.com%2Fcupid%2Fclose.html&link=http://likebright.com/cupid/&name={$cTitle}&caption=Congrats to {$mgendr[0].name}, {$mgendr[1].name}, {$mgendr[2].name}, {$mgendr[3].name} and {$mgendr[4].name}.&picture=http://likebright.com/cupid/libs/php/image.php?q={$mgendr[0].uid}x0x{$mgendr[1].uid}x0x{$mgendr[2].uid}x0x{$mgendr[3].uid}x0x{$mgendr[4].uid}">
 							post to wall

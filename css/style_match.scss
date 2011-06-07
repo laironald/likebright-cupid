@@ -373,11 +373,11 @@ div.likeTip {
 		}
 	}
 	.next {
-		@include abspos($t: 3, $r: 0);
+		@include abspos($t: 0, $r: 3);
 		@include css3Transition;
 		@include opacity(60);
 		cursor: pointer;
-		width: 25px; 
+		width: 28px; 
 		&:hover {
 			@include opacity;
 		}

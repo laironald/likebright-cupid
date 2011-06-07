@@ -20,7 +20,6 @@
   <meta name="author" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <!-- CSS : implied media="all" -->
   <link rel="stylesheet" href="css/960.css">
@@ -41,8 +40,14 @@
 			</div>
 			{if $fbook.me}
 				<div class="boxy gadd">
+				{if $fbook.uid==2203233}
+					<a href="?degree=0{$url.status}" {if $smarty.get.degree!=2 and $smarty.get.degree!=1}class="select"{/if}>me</a>
+					<a href="?degree=1{$url.status}" {if $smarty.get.degree==1}class="select"{/if}>friends</a>
+					<a href="?degree=2{$url.status}" {if $smarty.get.degree==2}class="select"{/if}>+friends of friends</a>
+				{else}
 					<a href="?degree=1{$url.status}" {if $smarty.get.degree!=2}class="select"{/if}>friends</a>
 					<a href="?degree=2{$url.status}" {if $smarty.get.degree==2}class="select"{/if}>+friends of friends</a>
+				{/if}
 				</div>
 				<div class="boxy gadd">
 					<a href="?status=s{$url.degree}" {if $smarty.get.status!="x"}class="select"{/if}>single</a>
@@ -122,6 +127,7 @@
   <script src="js/jquery.timers.min.js"></script>
   <script src="js/jquery.qtip.min.js"></script>
   <script src="js/jquery.fancybox-1.3.4.pack.js"></script>
+  <script src="js/underscore-min.js"></script>
   <script>  
 	$(document).ready(function() {
 		match = $.parseJSON('{$matchJSON}');
@@ -134,6 +140,46 @@
 				'titlePosition'		: 'over'
 			});
 		});
+
+		{*
+		{if $fbook.me}
+			var query = FB.Data.query("SELECT uid, name FROM user WHERE uid in (SELECT uid2 FROM friend WHERE uid1 = me() LIMIT 5 OFFSET 0)");
+			query.wait(function(rows) {
+				alert(JSON.stringify(rows));
+			});
+		
+		
+		{/if}
+		
+		{if $fbook.me}
+			FB.api('/me/friends', function(friends) {
+				fidlist = _.map(friends["data"], function(v) { return v["id"]; });
+				
+				/*
+				FB.api({
+					method: "fql.query", 
+					query: "SELECT uid, email, first_name, middle_name, last_name, name, pic_square, pic_big, affiliations, birthday_date, sex, meeting_sex, relationship_status, current_location, family FROM user WHERE uid in (SELECT uid1 FROM friend WHERE uid2=me())"
+					//, activities, interests, music, tv, movies, books
+				}, 
+				function(fql) {
+					alert("HELLO2");
+					alert(JSON.stringify(fql));
+				});
+				FB.api({
+					method: "fql.query", 
+					query: "SELECT uid,music,tv,movies FROM user WHERE uid in (SELECT uid1 FROM friend WHERE uid2=me())"
+					//, activities, interests, music, tv, movies, books
+				}, 
+				function(fql2) {
+					alert("HELLO3");
+					alert(JSON.stringify(fql2));
+				});
+				*/
+			});
+			alert("OK");
+		{/if}
+		*}
+		
 			{*
 				$("#ppic a").fancybox({
 					'width'				: 600,

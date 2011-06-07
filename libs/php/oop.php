@@ -84,11 +84,29 @@ class elo {
 							SET  a.R={$uids[$id]["A"]["R"]}, a.W={$uids[$id]["A"]["W"]}, a.L={$uids[$id]["A"]["L"]}, a.T={$uids[$id]["A"]["T"]}, a.P={$uids[$id]["A"]["P"]}, a.sex=b.sex, a.name=b.name, a.status=b.status, a.pic=b.pic
 						  WHERE  a.uid='{$id}' AND a.uid=b.fid", $conn);
 			mysql_query("UPDATE  cupidRank SET R2=(3*R+{$uids[$id]["A"]["R"]})/4 WHERE fid in ('{$id}', '{$cid}')", $conn);
+			
+			//UPDATE VOTED COUNT
+			$res = mysql_query("SELECT uid FROM cupidFriends WHERE fid='{$id}'", $conn);
+			$uids = array();
+			while($data = mysql_fetch_assoc($res))
+				$uids[] = $data["uid"];
+			$uids = "'".implode($uids, "', '")."'";
+			mysql_query("UPDATE cupidUser SET voted=voted+1 WHERE uid in ({$uids})", $conn);		
 		};
 		$lambda($fid1, $cid, $uids);
 		$lambda($fid2, $cid, $uids);		
+
+		//UPDATE MATCHED COUNT
+		mysql_query("UPDATE cupidUser SET matched=matched+1 WHERE uid='{$cid}'", $conn);		
 		
 		$this->uids = $uids;
+	}
+	public function skip() {
+		$conn = get_db_conn();
+		$uid = $this->uid;
+		mysql_query("UPDATE  cupidUser
+						SET  skipped = skipped + 1
+					  WHERE  uid='{$uid}'", $conn);
 	}
 	public function pct() {
 		$fid1 = $this->fid1;
@@ -151,11 +169,15 @@ class meCupid {
 		$data["profile"]["name"] = json_decode($data["profile"]["name"], true);
 		$data["profile"]["config"] = json_decode($data["profile"]["config"], true);
 		if ($data["profile"]["config"]==null)
-			$data["profile"]["config"] = array("1s"=>0, "1x"=>0, "2s"=>0, "2x"=>0);
+			$data["profile"]["config"] = array("0s"=>0, "0x"=>0, "1s"=>0, "1x"=>0, "2s"=>0, "2x"=>0);
 		if ($scr==null)
-			$data["screen"] = (($_GET["degree"]=="2")?"2":"1").(($_GET["status"]=="x")?"x":"s");
+			$data["screen"] = ((in_array($_GET["degree"], array("1", "2")))?$_GET["degree"]:"0").(($_GET["status"]=="x")?"x":"s");
 		else
 			$data["screen"] = $src;
+			
+		if ($data["profile"]["config"][$data["screen"]]=="")
+			$data["profile"]["config"][$data["screen"]]=0;
+			
 		$this->user = $data;
 		$this->scr = $scr;
 		$this->uid = $uid;

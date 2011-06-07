@@ -13,14 +13,14 @@
 		<div class="grid_6 alpha omega tops">
 			<div class="title">
 				<img src="images/famfamfam/icons/lock.png" /> 
-				Vote {#unlock1#} times to unlock your dateable friends.
+				Vote {#unlock1#} times to unlock your matched friends.
 			</div>
 		</div>
 	{elseif $matchC < #unlock2# && !$secretOK}
 		<div class="grid_6 alpha omega tops">
 			<div class="title">
 				<img src="images/famfamfam/icons/lock.png" /> 
-				Vote {#unlock2#} times to unlock more dateable friends.
+				Vote {#unlock2#} times to unlock more matched friends.
 			</div>
 		</div>
 	{/if} 

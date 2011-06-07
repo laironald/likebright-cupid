@@ -75,6 +75,8 @@ if ($session) {
 			if ($goRank) {
 				$rank->rating($wid);
 			}
+		} else {
+			$rank->skip();
 		}
 		$rank->pct();
 		echo json_encode(array($reg[0]=>0.50*$rank->uids[$m1]["C"]["E"]+0.50*$rank->uids[$m1]["A"]["E"],

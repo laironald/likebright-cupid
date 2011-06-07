@@ -38,7 +38,7 @@ function getFriends($uid, $degree="1", $inc=true) {
 	if ($degree=="2")
 		$mckey = "{$uid}|friends|2|{($inc)?1:0}_Array";
 	else
-		$mckey = "{$uid}|friends|1|_Array";
+		$mckey = "{$uid}|friends|{$degree}|_Array";
 	$mcval = $mc->toggle($mckey);
 
 	//$mc->flush();
@@ -52,17 +52,23 @@ function getFriends($uid, $degree="1", $inc=true) {
 		$fList = $fList["{$uid}|friends"];
 		foreach($fList["data"] as $friend) $friends[] = $friend["id"];
 		
-		if ($degree=="2") {
+		if ($degree=="2" || $degree=="0") { //if me show friends of friends?
+			//Query up the most frequent friends -- do this for speed reasons
 			$in = "'".implode("','", $friends)."'";	
+			$res = mysql_query("SELECT uid FROM cupidUser WHERE uid in ({$in}) ORDER BY voted DESC LIMIT 5", $conn); 
+			$uids = array();
+			while ($data = mysql_fetch_assoc($res))
+				$uids[] = $data["uid"];
+			$in = "'".implode("','", $uids)."'";	
+			
 			$friend2 = array();
-			if ($inc)
-				$res = mysql_query("SELECT distinct(fid) as fid FROM cupidFriends WHERE uid in ({$in}) AND fid!='{$uid}'", $conn);
-			else
-				$res = mysql_query("SELECT distinct(fid) as fid FROM cupidFriends WHERE uid in ({$in}, '{$uid}') AND fid!='{$uid}'", $conn);
+			$res = mysql_query("SELECT distinct(fid) as fid FROM cupidFriends WHERE uid in ({$in}) AND fid!='{$uid}'", $conn); 
 			while ($datum = mysql_fetch_assoc($res)) {
 				if ($inc or (!$inc and !in_array($datum["fid"], $friends)))
 					$friend2[] = $datum["fid"];
 			}
+			if ($inc)
+				$friend2[] = $uid;
 			$friends = $friend2;
 		}		
 		$mc->toggle($mckey, json_encode($friends), 12*60*60);
@@ -314,11 +320,24 @@ function parseJSON($k, $v) {
 				}
 				*/
 			} else {
-				mysql_query("INSERT IGNORE INTO cupidUser (uid) VALUES ('{$keyd[0]}')", $conn);
+				//ONLY UPDATE COUNTS IF USER ID DOES NOT EXIST
+				$res = mysql_query("SELECT count(*) FROM cupidUser WHERE uid='{$keyd[0]}'", $conn);
+				if (mysql_num_rows($res) == 0) {
+					$in = "'".implode($friends, "', '")."'";
+					//GET MATCHED Count
+					$stats = mysql_fetch_assoc(mysql_query("SELECT count(*) as matched FROM cupidVote WHERE uid='{$keyd[0]}'", $conn));
+					//GET VOTED Count
+					$fid1 = mysql_fetch_assoc(mysql_query("SELECT count(*) as cnt FROM cupidVote WHERE fid1 in ({$in})", $conn));
+					$fid2 = mysql_fetch_assoc(mysql_query("SELECT count(*) as cnt FROM cupidVote WHERE fid2 in ({$in})", $conn));
+					$stats["voted"] = $fid1["cnt"] + $fid2["cnt"];	
+					mysql_query("INSERT IGNORE INTO cupidUser (uid) VALUES ('{$keyd[0]}')", $conn);
+					mysql_query("UPDATE cupidUser SET voted={$stats["voted"]}, matched={$stats["matched"]} WHERE uid='{$keyd[0]}'", $conn);
+				}
 				mysql_query(sprintf("UPDATE cupidUser 
 										SET email='{$fql["email"]}',
 											sex='{$fql["sex"]}', 
 											pic='{$fql["pic_square"]}', 
+											country='{$fql["current_location"]["country"]}',
 											status='%s', name='%s', json='%s' 
 									  WHERE uid='{$keyd[0]}'",
 					mysql_real_escape_string($fql["relationship_status"]),
@@ -535,7 +554,7 @@ function usrLoaded($uid) {
 
 function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 	global $uid;
-	$degree = ($_GET["degree"]=="2")?"2":"1";
+	$degree = (in_array($_GET["degree"], array("1", "2")))?$_GET["degree"]:"0";
 	$status = ($status==NULL)?$_GET["status"]:$status;
 	$status = ($status=="x")?"x":"s";
 	
@@ -567,7 +586,7 @@ function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 			$n = json_decode($datum["name"], true);
 			$ui[] = array("name"=>$n["name"], "uid"=>$datum["uid"], "pic"=>$datum["pic"], "matchlist"=>in_array($datum["uid"], $myFriends));
 		}
-		$mc->toggle($mckey, json_encode($ui), 15*60); //cache most dateable guys for 15 minutes
+		$mc->toggle($mckey, json_encode($ui), 15*60); //cache most matched peeps for 15 minutes
 	}
 	return $ui;
 }
@@ -581,13 +600,6 @@ function match_api($num=50, $login=true) {
 	$ageIt = function($birthday) {
 		return floor((time() - strtotime($birthday))/31556926);
 	};
-
-	/* 
-		//GRAB AND PARSE ALL FQL PROFILES
-		$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile'", $conn);
-		while ($datum = mysql_fetch_array($res))
-			parseJSON($datum["keycat"], $datum["value"]);
-	*/
 	
 	if ($login) {
 		$friends = getFriends($uid);
@@ -605,25 +617,26 @@ function match_api($num=50, $login=true) {
 												from  user 
 											   where  uid in ({$in}, '{$uid}')", 
 					"access_token"=>$oauth, "format"=>"json"))
-			), $force=true);
+			), $force=false);
 		
 		if ($uid=="2203233") {
-			/*
-				$val2 = curling(array(
-					"{$uid}|fql_minilike"=>  
-						array("url"=>"https://api.facebook.com/method/fql.query", 
-							"params"=>array("query"=>"select  uid,name,relationship_status
-														from  user 
-													   where  uid in ('405813')", 
-							"access_token"=>$oauth, "format"=>"json"))
-				), $force=true);
-				var_dump($oauth);
-				var_dump($val2["{$uid}|fql_minilike"]);
-			*/
+			/* 
+				//GRAB AND PARSE ALL FQL PROFILES
+				$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile'", $conn);
+				while ($datum = mysql_fetch_array($res))
+					parseJSON($datum["keycat"], $datum["value"]);
+			/* */
 		}
 		
-		if ($_GET["degree"]==2) {
-			$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile' AND uid in ({$in})", $conn);
+		if ($_GET["degree"]!=1) {
+			//grab least frequent ones
+			$res = mysql_query("SELECT uid FROM cupidUser WHERE uid in ({$in}) ORDER BY voted LIMIT 5", $conn);
+			$uids = array();
+			while ($data = mysql_fetch_assoc($res))
+				$uids[] = $data["uid"];
+			$inU = "'".implode($uids, "', '")."'";
+
+			$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile' AND uid in ({$inU})", $conn);
 			while ($datum = mysql_fetch_array($res))
 				$val["{$uid}|fql_profile"] = array_merge($val["{$uid}|fql_profile"], json_decode($datum["value"], true, 512));					
 		}
@@ -635,10 +648,18 @@ function match_api($num=50, $login=true) {
 		$mc->connect('localhost', 11211);
 		$mckey = "match_api|splash";
 		$mcval = $mc->toggle($mckey);
+
 		if ($mcval != false) {
 			$val["data"] = json_decode($mcval, true);
 		} else {
-			$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile' ORDER BY rand() LIMIT 2", $conn);
+			//SELECT 5 RANDOMS (US ONLY!)
+			$res = mysql_query("SELECT uid FROM cupidUser WHERE country='United States' ORDER BY rand() LIMIT 5", $conn);
+			$uids = array();
+			while ($data=mysql_fetch_assoc($res))
+				$uids[] = $data["uid"];
+			$uids = "'".implode($uids, "','")."'";			
+			
+			$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile' AND uid in ({$uids})", $conn);
 			while ($data=mysql_fetch_assoc($res))
 				$val["data"] = array_merge($val["data"], json_decode($data["value"], true, 512));
 			$mc->toggle($mckey, json_encode($val["data"]), 7200);
@@ -649,9 +670,11 @@ function match_api($num=50, $login=true) {
 	
 	//IF USER "LOCKS" uid
 	if ($_GET["uid"]!="") {
-		$res = mysql_query("SELECT fid, sex FROM cupidFriends WHERE uid='{$uid}' AND fid='{$_GET["uid"]}'", $conn);
-		if (mysql_num_rows($res) > 0)
+		$res = mysql_query("SELECT fid, sex, json FROM cupidFriends WHERE fid='{$_GET["uid"]}'", $conn);
+		if (mysql_num_rows($res) > 0) {
 			$lock = mysql_fetch_assoc($res);
+			$lock["json"] = json_decode($lock["json"], true, 512);
+		}
 	}
 	
 	$loc = array("male"=>array("male"=>0, "female"=>0), "female"=>array("male"=>0, "female"=>0));
@@ -659,6 +682,13 @@ function match_api($num=50, $login=true) {
 
 	$meet = array();
 	$yall = array();
+	
+	//if profile is locked		
+	if ($lock)  
+		$meet[$lock["sex"]][$lock["sex"]][] = array("uid"=>$lock["json"]["uid"], 
+													"name"=>(($login)?$lock["json"]["name"]:"{$lock["json"]["first_name"]} {$lock["json"]["last_name"][0]}."), 
+													"pic"=>$lock["json"]["pic_square"], "picB"=>$lock["json"]["pic_big"]);
+	
 	foreach($val["data"] as $v) {
 		if (!array_key_exists($v["uid"], $yall)) {
 			$yall[$v["uid"]] = $v;
@@ -666,19 +696,18 @@ function match_api($num=50, $login=true) {
 			if (substr_count($v["birthday_date"], "/") == 2)
 				$yall[$v["uid"]]["age"] = $ageIt($v["birthday_date"]);				
 
-			if ($v["family"]!=null)
-				foreach($v["family"] as $famid)
-					$yall[$v["uid"]]["fam"][] = $famid["uid"];
-			
+			/*
+				if ($v["family"]!=null)
+					foreach($v["family"] as $famid)
+						$yall[$v["uid"]]["fam"][] = $famid["uid"];
+			*/
 			if (($v["relationship_status"]=="Single" || 
 				($_GET['status']=="x" && $v["relationship_status"]==null)) && $v["sex"]!="") {
 				$cR = array("uid"=>$v["uid"], "name"=>(($login)?$v["name"]:"{$v["first_name"]} {$v["last_name"][0]}."), "pic"=>$v["pic_square"], "picB"=>$v["pic_big"]);
 				 				
 				if ($lock) {
-					if (($v["sex"]==$lock["sex"] && $v["sex"]=="male" && $v["uid"]==$lock["fid"]) || $v["sex"]=="female")
-						$meet["male"][$v["sex"]][] = $cR;
-					if (($v["sex"]==$lock["sex"] && $v["sex"]=="female" && $v["uid"]==$lock["fid"]) || $v["sex"]=="male")
-						$meet["female"][$v["sex"]][] = $cR;
+					if ($v["sex"]!=$lock["sex"])
+						$meet[$lock["sex"]][$v["sex"]][] = $cR;
 				} else {
 					if ($login) {
 						//This guarantees that the people that show up as base matches will be people you recognize..
@@ -700,8 +729,12 @@ function match_api($num=50, $login=true) {
 		}
 	}
 
-	if (count($meet["male"]["female"])<2 or count($meet["female"]["male"])<2)
+	
+	if (count($meet["male"]["female"])<2 and count($meet["female"]["male"])<2)
 		return;
+	else if (count($meet["male"]["female"])<2 and count($meet["female"]["male"])<2) //IF ONE SIDE IS OK LOCK IT!
+		$lock["sex"] = (count($meet["male"]["female"])<2)?"male":"female";
+		
 	if (!isset($meet["male"]["male"]) and !isset($meet["female"]["female"])) {
 		return;
 	} else {
@@ -710,7 +743,6 @@ function match_api($num=50, $login=true) {
 		@shuffle($meet["female"]["male"]);
 		@shuffle($meet["female"]["female"]);
 	}
-
 
 	//matching algorithm starts here
 	
@@ -794,150 +826,4 @@ function match_api($num=50, $login=true) {
 	}	
 	
 	return $match;
-}
-function api($uid=null, $params=null) {
-	global $fbook;
-	$conn = get_db_conn();
-	$limit = 75;
-	$table = "listed";
-	$sList = array();
-	
-	$mc = new Memcache2;
-	$mc->connect('localhost', 11211);
-	$mckey = "{$uid}|{$params["status"]}|{$params["loc"]}|{$params["gender"]}|{$params["degree"]}";
-	$mcval = $mc->toggle($mckey);
-
-	if ($mcval != false) {
-		$api = json_decode($mcval, true);
-	} else {
-		//default display
-
-		function api_attributes($datum, $uid, $netw, $fList, $fbook) {
-			$datum["lids"] = explode(",", $datum["lids"]);
-			if ($datum["lcount"] > 6)
-				$datum["lids"] = array_slice($datum["lids"], 0, 5);			
-			
-			$dFriends = explode(",", $datum["friends"]);
-			shuffle($datum["lids"]);
-			if ($uid!=null) {
-				$netw = array_intersect($fList, $dFriends);
-				$datum["degree"] = (count($netw)>0)?((in_array($uid, $netw))?1: 2):0;
-				if ($datum["degree"]==0 and in_array($datum["uid"], $fList))
-					$datum["degree"]=1;
-			}
-			$datum["name"] = ($datum["degree"]>0)?$datum["uname"]:$datum["uname2"];		
-
-			if ($uid==null)
-				$datum["url"] = $fbook["login"];
-			else
-				$datum["url"] = "profile.php?q={$datum["uid"]}";
-			
-			unset($datum["uname"]);
-			unset($datum["uname2"]);
-			return $datum;
-		}
-
-		if ($uid==null)
-		{
-			mysql_query("CREATE TEMPORARY TABLE friend0 AS SELECT distinct fid FROM friends ORDER BY rand() limit 40", $conn);
-			mysql_query("CREATE INDEX fid ON friend0 (fid);", $conn);
-			mysql_query("CREATE TEMPORARY TABLE listed AS SELECT b.* FROM friend0 AS a INNER JOIN likes AS b ON a.fid=b.uid;", $conn);
-			mysql_query("CREATE INDEX uid ON listed (uid);", $conn);		
-		}
-		else
-		{
-			$fList = array($uid);
-			foreach($fbook["me"]["friends"]["data"] as $friend) 
-				$fList[] = $friend["id"];
-
-			if ($params["status"]=="")
-				$params["status"] = "a";
-
-			$qStr = array("1=1");
-			switch ($params["status"])
-			{
-				case "s":
-					$qStr[] = "b.status in ('Single')";
-					break;
-				case "x":
-					$qStr[] = "b.status in ('Single', '')";
-					break;
-			}
-			switch ($params["loc"])
-			{
-				case "s":
-					$qStr[] = "b.location in ('{$fbook["me"]["profile"]["location"]["name"]}')";
-					break;
-				case "x":
-					$qStr[] = "b.state in ('{$fbook["me"]["profile"]["location"]["loc"][1]}')";
-					break;
-			}
-			if (in_array($params["gender"], array("male", "female")))
-				$qStr[] = "b.gender = '{$params["gender"]}'";
-
-			#degree = 0, all
-			#degree = 1, self
-			#degree = 2, self + friends
-			$nodeStr = "'".(($params["degree"]==1)?$uid :implode("', '", $fList))."'";
-			$qStr = implode(" AND ", $qStr);
-
-			$table = ($params["degree"]>0)?"list0":"listed";
-			mysql_query("CREATE TEMPORARY TABLE listed AS SELECT b.* FROM likes AS a INNER JOIN likes AS b ON a.lid=b.lid AND a.uid in ('{$uid}') AND b.uid not in ('{$uid}') AND {$qStr}", $conn);
-			mysql_query("CREATE INDEX uid ON listed (uid);", $conn);
-
-			if ($params["degree"]>0) 
-			{
-				mysql_query("CREATE TEMPORARY TABLE friend0 AS SELECT distinct fid FROM friends WHERE uid in ({$nodeStr}) AND fid!='{$uid}'", $conn);
-				mysql_query("CREATE INDEX fid ON friend0 (fid);", $conn);
-				mysql_query("CREATE TEMPORARY TABLE list0 AS SELECT b.* FROM friend0 AS a INNER JOIN listed AS b ON a.fid=b.uid", $conn);
-				mysql_query("CREATE INDEX uid ON list0 (uid);", $conn);
-			}
-			$api = array();
-		}
-		//$res = mysql_query("SELECT lid as uid, group_concat(uid) AS lids, gender, name as uname2, friends FROM list0 GROUP BY lid ORDER BY count(*) DESC LIMIT 100", $conn);
-		
-		$res = mysql_query("SELECT  uid, group_concat(lid) AS lids, count(*) AS lcount, gender, uname, uname2, friends 
-							  FROM  {$table} 
-						  GROUP BY  uid 
-						  ORDER BY  sum(lcount) DESC 
-						     LIMIT  {$limit}", $conn);
-		while ($datum = mysql_fetch_assoc($res)) {
-			$api[] = api_attributes($datum, $uid, $netw, $fList, $fbook);
-			$sList[] = $datum["uid"];
-		}
-
-		//If less than limit and not default screen
-		if ($uid != null)
-		{
-			$cnt = mysql_fetch_array(mysql_query("SELECT count(distinct uid) FROM {$table}", $conn));
-			if ($cnt[0] < $limit)
-			{
-				$sListStr = implode("', '", $sList);
-				if ($params["degree"]>0) {
-					mysql_query("CREATE TEMPORARY TABLE extras AS 
-									SELECT  b.*
-									  FROM  friend0 AS a
-								INNER JOIN  likes AS b
-									    ON  a.fid=b.uid AND b.uid not in ('{$uid}', '{$sListStr}') AND {$qStr}", $conn);
-				}
-				else {
-					mysql_query("CREATE TEMPORARY TABLE extras AS 
-									SELECT  b.*
-									  FROM  likes AS b
-									 WHERE  b.uid not in ('{$uid}', '{$sListStr}') AND {$qStr}", $conn);
-				}
-				mysql_query("CREATE INDEX uid ON extras (uid);", $conn);
-				$res = mysql_query("SELECT  uid, '' AS lids, 0 AS lcount, gender, uname, uname2, friends 
-									  FROM  extras
-								  GROUP BY  uid 
-								  ORDER BY  rand() 
-									 LIMIT  {$cnt[0]}", $conn);
-				while ($datum = mysql_fetch_assoc($res))
-					$api[] = api_attributes($datum, $uid, $netw, $fList, $fbook);			
-			}
-		}
-		$mc->toggle($mckey, json_encode($api), ($uid==null)?18000:120);
-	}
-	//$mc->flush();
-	return $api;
 }

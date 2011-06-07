@@ -38,7 +38,7 @@
 						{/if}
 					</div>
 					<div class="text">
-						<font class="f1">Who is a better date for</font><br/>
+						<font class="f1">Who is a better match for</font><br/>
 						<font id="cname" class="f2">{$match[0].c.name}</font>
 						{if !$fbook.me}
 							<br/><font class="f0"><a href="{$fbook.login}">Connect with Facebook</a> to see your friends.</font>
@@ -153,7 +153,7 @@
 			<div class="grid_6 alpha omega divide">
 				<div class="title">Make your vote count! <a href="{$fbook.login}">Connect with Facebook.</a></div>
 				<img src="images/famfamfam/icons/help.png" /> Play matchmaker with your Facebook friends! <br />
-				<img src="images/famfamfam/icons/group.png" /> Discover which friends are most dateable! <br />
+				<img src="images/famfamfam/icons/group.png" /> Discover which friends are frequently matched! <br />
 				<img src="images/famfamfam/icons/heart.png" /> Learn who your friends think you should date! <br />
 				<img src="images/famfamfam/icons/shield.png" /> Your votes are anonymous... have fun! <br />
 				<div class="bigfont">
@@ -198,6 +198,7 @@
 						<li><a target="_blank" href="http://icondock.com/free/vector-social-media-icons">Icon Dock - Vector Social Media Icons</a></li>
 						<li><a target="_blank" href="http://sass-lang.com/">Sass (style with attitude)</a></li>
 						<li><a target="_blank" href="http://smarty.net">Smarty Template Engine</a></li>
+						<li><a target="_blank" href="http://documentcloud.github.com/underscore">Underscore.js</a></li>
 					</ul>
 					<br />
 					famfamfam icons used: 								
