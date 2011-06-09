@@ -118,7 +118,7 @@
 			</div>
 		{else}
 			<div class="grid_7 push_2 alpha omega">		
-				Sorry! You do not have enough applicable friends for cupid to operate properly. Please try the friends of friends option and please continue to connect with more Facebook friends.<br /><br />Best of luck.
+				Sorry! You do not have enough applicable friends for cupid to operate properly. Please continue to connect with more Facebook friends.<br /><br />Best of luck.
 			</div>
 		{/if}	
 	</div>
@@ -129,30 +129,6 @@
 			<div id="matchtops">
 				{include file="matchtops.tpl"}
 			</div>
-			{* DECIDED TO GET RID OF THIS FOR NOW *}
-			{*
-			<div class="grid_6 alpha omega divide">
-				<div class="matchlist">			
-					<div class="title">
-						You have {$wings.count} friend{if $wings.count!=1}s{/if} on likebright. 
-						{if $fbook.me.profile.status=="Single" or $fbook.me.profile.status==""}
-						{/if}
-					</div>
-					{foreach from=$wings.faces item=frd}
-						<a target="_blank" href="http://www.facebook.com/profile.php?id={$frd.uid}"><img src="{$frd.pic}" title="{$frd.name}" /></a>
-					{/foreach}
-				</div>
-				<div class="send">
-					<div class="divs">
-						<div class="send">
-							<fb:send href="http://likebright.com/cupid/" font=""></fb:send>
-						</div>
-						Send likebright to more friends!
-					</div>
-					<div class="divs"></div>
-				</div>
-			</div>
-			*}
 		{else}
 			<div class="grid_6 alpha omega divide">
 				<div class="title">Make your vote count! <a href="{$fbook.login}">Connect with Facebook.</a></div>

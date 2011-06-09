@@ -54,3 +54,10 @@ if 1==1:
 		if d["current_location"] != None:
 			print u
 			c.execute("UPDATE cupidUser SET country=%s WHERE uid=%s", (d["current_location"]["country"], u,))
+			
+## THIS IS FOR UPDATING STATUS
+if 1=1:
+	c.execute("UPDATE cupidRank    a, cupidFriends b SET a.status=b.status WHERE a.fid=b.fid")
+	c.execute("UPDATE cupidRankM   a, cupidFriends b SET a.status=b.status WHERE a.fid=b.fid")
+	c.execute("UPDATE cupidRankAll a, cupidFriends b SET a.status=b.status WHERE a.uid=b.fid")
+	

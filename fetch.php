@@ -22,9 +22,6 @@ if ($session) {
 }
 $conn = get_db_conn();
 
-
-$get = getIt($_GET);
-
 $smarty = new Smarty();
 $smarty->force_compile = true;
 $smarty->setTemplateDir( 'libs/smarty/templates');
@@ -35,7 +32,6 @@ $smarty->plugins_dir[] = 'libs/php';
 $smarty->caching = false;
 $smarty->cache_lifetime = 0;
 $smarty->assign("ie", using_ie());
-$smarty->assign("get", $get);
 
 $url["degree"] = (in_array($get["degree"], array("0", "1", "2")))?"&degree={$get["degree"]}":"";
 $url["status"] = (in_array($get["status"], array("s", "x", "a")))?"&status={$get["status"]}":"";
@@ -47,6 +43,16 @@ $smarty->assign("url", $url);
 
 $fbook = array();
 if ($session) {
+	$fbook = array(	"session"	=> 	json_encode($session),
+					"me"		=>  $me,
+					"uid"		=>  $uid);
+	$smarty->assign("fbook", $fbook);
+
+	$meCupid = new meCupid($uid);
+	$fbook["me"] = $meCupid->user;
+	$get = getIt($_GET, $fbook["me"]["profile"]["status"]);
+	$smarty->assign("get", $get);
+	
 	$oauth = $session['access_token'];
 	$display = true;
 	if ($_GET['q']=="match") {
@@ -96,52 +102,33 @@ if ($session) {
 									$rank->uids[$m1]["A"]["T"]+$rank->uids[$m2]["A"]["T"]));
 	}
 	elseif ($_GET["q"]=="matchlist") {
-		$display = true;
-		$useID = ($_GET["uid"] != "")?$_GET["uid"] :$uid;
-		
 		$meCupid = new meCupid($uid);
 		$fbook["me"] = $meCupid->user;
 		$friends = getFriends($uid);
-		$matchlistOK = ($fbook["me"]["profile"]["matches"] >= 150 or $_GET["secret"]!="" or !in_array($useID, $friends));
 		
-		if ($useID != $uid and !$matchlistOK)
-			$display = false;
+		if ($get["status"]=="x")
+			$status = "status in ('Single', '')";
+		else
+			$status = "status not in ('Single', '')";
+	
+		$flist = getFriends($uid, 2);
+		$in = "'".implode("','", $flist)."'";
+		$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND fid in ({$in}) AND {$status} AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
 		
-		if ($display) {
-			if ($get["status"]=="x")
-				//$status = "status in ('Single', '')";
-				$status = "status in ('')";
-			elseif ($get["status"]=="s")
-				$status = "status='Single'";
-			else
-				$status = "status not in ('Single', '')";
-		
-			if ($get["degree"]==0)
-				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$useID}' AND {$status} AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
-			else {
-				$flist = getFriends($uid, $get["degree"], false);
-				$in = "'".implode("','", $flist)."'";
-				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$useID}' AND fid in ({$in}) AND {$status} AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
-			}
-			$match_tops = array();
-			while ($data = mysql_fetch_assoc($res)) {
-				$data["name"] = json_decode($data["name"], true);
-				$match_tops["item"][] = array("uid"=>$data["uid"], "pic"=>$data["pic"], "name"=>$data["name"]["name"], "matchlist"=>in_array($data["uid"], $friends));
-			}
-			if (count($match_tops["item"])==0) {
-				echo "<font style='font-size: 9pt; color: #999; font-family: Arial;'>No matches have been made!</font>";
-			} else {
-				$smarty->assign("matchlistOK", $matchlistOK);		
-				$smarty->assign("match_tops", $match_tops);		
-				$smarty->display('matchtops.tpl');
-			}
+		$match_tops = array();
+		while ($data = mysql_fetch_assoc($res)) {
+			$data["name"] = json_decode($data["name"], true);
+			$match_tops["item"][] = array("uid"=>$data["uid"], "pic"=>$data["pic"], "name"=>$data["name"]["name"], "matchlist"=>in_array($data["uid"], $friends));
+		}
+		if (count($match_tops["item"])==0) {
+			echo "<font style='font-size: 9pt; color: #999; font-family: Arial;'>No matches have been made!</font>";
 		} else {
-			echo "<img src='http://likebright.com/images/famfamfam/icons/lock.png' /> ";
-			echo "<font style='font-size: 9pt; color: #999; font-family: Arial;'>This feature is locked!</font>";
+			$smarty->assign("matchlistOK", $matchlistOK);		
+			$smarty->assign("match_tops", $match_tops);		
+			$smarty->display('matchtops.tpl');
 		}
 	}
 	elseif ($_GET["q"]=="matchtops") {
-		$fbook = array();
 		$meCupid = new meCupid($uid);
 		$fbook["me"] = $meCupid->user;
 		$matchlistOK = ($fbook["me"]["profile"]["matches"] >= 150 or $_GET["secret"]!="");

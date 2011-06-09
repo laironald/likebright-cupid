@@ -45,9 +45,6 @@ $smarty->cache_lifetime = 120;
 $smarty->assign("facebook", $facebook);
 $smarty->assign("ie", using_ie());
 
-$get = getIt($_GET);
-$smarty->assign("get", $get);
-
 $fbook = array("session"=> 	json_encode($session),
 			   "me"		=>  $me,
 			   "uid"	=>  $uid,
@@ -56,6 +53,11 @@ $fbook = array("session"=> 	json_encode($session),
 			   "logout"	=>	$facebook->getLogoutUrl(array('next' => 'http://likebright.com/cupid/?logout=true')));
 
 if (isset($session)) {
+	$meCupid = new meCupid($uid, null, $fbook["me"]);
+	$fbook["me"] = $meCupid->user;
+	$get = getIt($_GET, $fbook["me"]["profile"]["status"]);
+	$smarty->assign("get", $get);
+
 	$oauth = $session['access_token'];
 
 	/*
@@ -68,9 +70,6 @@ if (isset($session)) {
 	$fbook["me"]["user"] = get_user($uid, array("email"=>$fbook["me"]["profile"]["email"], "access_key"=>$oauth, "name"=>$fbook["me"]["profile"]["name"]));
 	
 	$match = match_api(25);
-	
-	$meCupid = new meCupid($uid, null, $fbook["me"]);
-	$fbook["me"] = $meCupid->user;
 	$smarty->assign("matchJSON", json_encode($match, JSON_HEX_APOS));
 	$smarty->assign("match", $match);
 

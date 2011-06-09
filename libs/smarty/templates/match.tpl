@@ -6,8 +6,8 @@
 {assign var='ron' value=($fbook.uid=="2203233")}
 {if $ron}{$fbook.me.profile.email}{/if}
 <head>
-  <meta property="og:title" content="meet someone new" />
-  <meta property="og:description" content="Play likebright and learn who your friends think is right for you!" />
+  <meta property="og:title" content="Play likebright with me!" />
+  <meta property="og:description" content="See friends' matches for you and vote on matches for them. No one will know that you voted or played." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="http://likebright.com/cupid/" />
   <meta property="og:image" content="http://likebright.com/cupid/images/likebright-square-big.jpg" />
@@ -42,11 +42,11 @@
 				<div class="boxy gadd">
 					<a href="?degree=0{$url.status}" {if $get.degree==0}class="select"{/if}>me</a>
 					<a href="?degree=1{$url.status}" {if $get.degree==1}class="select"{/if}>friends</a>
-					<a href="?degree=2{$url.status}" {if $get.degree==2}class="select"{/if}>+friends of friends</a>
+					{* <a href="?degree=2{$url.status}" {if $get.degree==2}class="select"{/if}>+friends of friends</a> *}
 				</div>
 				<div class="boxy gadd">
-					<a href="?status=s{$url.degree}" {if $get.status=="s"}class="select"{/if}>single</a>
-					<a href="?status=x{$url.degree}" {if $get.status=="x"}class="select"{/if}>+unknown</a>
+					{* <a href="?status=s{$url.degree}" {if $get.status=="s"}class="select"{/if}>single</a> *}
+					<a href="?status=x{$url.degree}" {if $get.status=="x"}class="select"{/if}>single+?</a>
 					<a href="?status=a{$url.degree}" {if $get.status=="a"}class="select"{/if}>all</a>
 				</div>
 				{*
@@ -259,17 +259,8 @@
 			}
 		});
 
-		{if $fbook.me}
-			if (vote==0)
-				$.ajax({
-					type: "GET",
-					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&status={$get.status}&degree={$get.degree}",
-					success: function(data) {
-						$("#button").show();
-						$("#button").html(data);
-					}
-				});			
-			else
+		{if $fbook.me && $get.degree!=0}
+			if (vote!=0)
 				$.ajax({
 					type: "GET",
 					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&m="+match[pos]["m"+vote]["uid"]+"&status={$get.status}&degree={$get.degree}",
@@ -277,7 +268,9 @@
 						$("#button").show();
 						$("#button").html(data);
 					}
-				});			
+				});
+			else
+				$("#button").html("");
 		{/if}
 		{*
 				$("#button").hide();

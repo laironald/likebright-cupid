@@ -182,7 +182,7 @@ class meCupid {
 		$data["profile"]["config"] = json_decode($data["profile"]["config"], true);
 		if ($data["profile"]["config"]==null)
 			$data["profile"]["config"] = array("0s"=>0, "0x"=>0, "1s"=>0, "1x"=>0, "2s"=>0, "2x"=>0);
-		$get = getIt($_GET);
+		$get = getIt($_GET, $data["profile"]["status"]);
 		if ($scr==null)
 			$data["screen"] = $get["degree"].$get["status"];
 		else
@@ -224,30 +224,23 @@ class meCupid {
 			
 		$mc = new Memcache2;
 		$mc->connect('localhost', 11211);
+		//$mc->flush();
+		
 		$mckey = "{$uid}|top_matches|{$get["status"]}|{$get["degree"]}|{$LIMIT}";
 		$mcval = $mc->toggle($mckey);
-		//$mc->flush();
 		if ($mcval != false) {
 			$match_your = json_decode($mcval, true);
 		} else {
-			$conn = get_db_conn();
-			
+			$conn = get_db_conn();			
 			if ($get["status"]=="x")
-				//$status = "status in ('Single', '')";
-				$status = "status in ('')";
-			elseif ($get["status"]=="s")
-				$status = "status='Single'";
+				$status = "status in ('Single', '')";
 			else
 				$status = "status not in ('Single', '')";
-
 						
-			if ($get["degree"]==0)
-				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 AND {$status} ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
-			else {
-				$friends = getFriends($uid, $get["degree"], false);
-				$in = "'".implode("','", $friends)."'";	
-				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND fid in ({$in}) AND P>50 AND {$status} ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
-			}
+			$friends = getFriends($uid, 2);
+			$in = "'".implode("','", $friends)."'";	
+			$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 AND {$status} AND fid in ({$in}) ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
+			
 			$match_your = array();	
 			resUser($match_your, $res);		
 			$mc->toggle($mckey, json_encode($match_your), 15*60);

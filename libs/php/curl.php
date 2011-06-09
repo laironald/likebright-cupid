@@ -3,10 +3,11 @@
 require_once("/var/www/cupid_config.php");
 require_once("oop.php");
 
-function getIt($params) {
+function getIt($params, $status) {
 	global $uid;
-	$get["degree"] = (in_array($params["degree"], array("0", "1", "2")))?$params["degree"]:"0";
-	$get["status"] = (in_array($params["status"], array("s", "x", "a")))?$params["status"]:"a";
+	$single = ($status=="" || $status=="Single")?true : false;
+	$get["degree"] = (in_array($params["degree"], array("0", "1")))?$params["degree"]:(($single)?"0":"1");
+	$get["status"] = (in_array($params["status"], array("x", "a")))?$params["status"]:"x";
 	$get["gender"] = (in_array($params["gender"], array("m", "f")))?$params["gender"]:"";
 	return $get;
 }
@@ -38,18 +39,15 @@ function resUser(&$array, $res) {
 	}
 }
 
-function getFriends($uid, $degree="1", $inc=true) {
+function getFriends($uid, $degree="1") {
 	global $session;
 	$mc = new Memcache2;
 	$mc->connect('localhost', 11211);
+	//$mc->flush();
 	
-	if ($degree=="2")
-		$mckey = "{$uid}|friends|2|{($inc)?1:0}_Array";
-	else
-		$mckey = "{$uid}|friends|{$degree}|_Array";
+	$mckey = "{$uid}|friends|{$degree}|_Array";
 	$mcval = $mc->toggle($mckey);
 
-	//$mc->flush();
 	if ($mcval != false) {
 		$friends = json_decode($mcval, true);
 	} else {
@@ -58,12 +56,13 @@ function getFriends($uid, $degree="1", $inc=true) {
 		$oauth = $session['access_token'];
 		$fList = curling(array("{$uid}|friends" => "https://graph.facebook.com/me/friends?access_token={$oauth}"), $force=true);
 		$fList = $fList["{$uid}|friends"];
-		foreach($fList["data"] as $friend) $friends[] = $friend["id"];
+		foreach($fList["data"] as $friend) 
+			$friends[] = $friend["id"];
 		
-		if ($degree=="2" || $degree=="0") { //if me show friends of friends?
+		if ($degree!="1") { //if me show friends of friends?
 			//Query up the most frequent friends -- do this for speed reasons
 			$in = "'".implode("','", $friends)."'";	
-			$uids = array();
+			$uids = array($uid);
 			$res = mysql_query("SELECT uid FROM cupidUser WHERE uid in ({$in}) ORDER BY voted DESC LIMIT 3", $conn); 
 			while ($data = mysql_fetch_assoc($res))
 				$uids[] = $data["uid"];
@@ -72,16 +71,11 @@ function getFriends($uid, $degree="1", $inc=true) {
 				$uids[] = $data["uid"];
 				
 			$in = "'".implode("','", $uids)."'";	
-			
-			$friend2 = array();
-			$res = mysql_query("SELECT distinct(fid) as fid FROM cupidFriends WHERE uid in ({$in}) AND fid!='{$uid}'", $conn); 
-			while ($datum = mysql_fetch_assoc($res)) {
-				if ($inc or (!$inc and !in_array($datum["fid"], $friends)))
-					$friend2[] = $datum["fid"];
-			}
-			if ($inc)
-				$friend2[] = $uid;
-			$friends = $friend2;
+
+			$res = mysql_query("SELECT fid FROM cupidFriends WHERE uid in ({$in}) AND fid!='{$uid}'", $conn); 
+			while ($datum = mysql_fetch_assoc($res))
+				$friends[] = $datum["fid"];
+			$friends = array_unique($friends);
 		}		
 		$mc->toggle($mckey, json_encode($friends), 12*60*60);
 	}
@@ -568,7 +562,9 @@ function usrLoaded($uid) {
 
 function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 	global $uid;
-	$get = getIt($_GET);
+	$meCupid = new meCupid($uid);
+	$fbook["me"] = $meCupid->user;
+	$get = getIt($_GET, $fbook["me"]["profile"]["status"]);
 	$degree = $get["degree"];
 	$status = $get["status"];
 	
@@ -576,10 +572,7 @@ function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 	$mc->connect('localhost', 11211);
 	$mckey = "{$uid}|match_tops|{$sex}|{$degree}|{$status}|{$limit}";
 	$mcval = $mc->toggle($mckey);
-	
-	if ($degree==0)
-		$mcval = false;
-	
+
 	//$mc->flush();
 	if ($mcval != false) {
 		$ui = json_decode($mcval, true);
@@ -587,25 +580,18 @@ function match_tops($friends=NULL, $sex="male", $limit=5, $status=NULL) {
 		$conn = get_db_conn();
 		$myFriends = getFriends($uid);
 		if ($friends == NULL)
-			$friends = getFriends($uid, $degree, false);
+			$friends = getFriends($uid, $degree);
 		$in = "'".implode("','", $friends)."'";	
 		
-		//$status = "status in ('Single', '')";
 		if ($status=="x")
-			$status = "status in ('')";
+			$status = "status in ('Single', '')";
 		elseif ($status=="s")
 			$status = "status='Single'";
 		else
 			$status = "status not in ('Single', '')";
 		
 		//$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND P>=50 AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
-		if ($get["degree"]==0)
-			if ($sex=="male")
-				$res = mysql_query("SELECT fid as uid, name, pic FROM cupidRankM   WHERE uid='{$uid}' AND {$status} AND P>=50 ORDER BY R2 DESC LIMIT {$limit}", $conn);
-			else
-				$res = mysql_query("SELECT fid as uid, name, pic FROM cupidRankM   WHERE uid='{$uid}' AND {$status} AND P>=50 ORDER BY R2 DESC LIMIT {$limit} OFFSET {$limit}", $conn);
-		else
-			$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
+		$res = mysql_query("SELECT uid, name, pic FROM cupidRankAll WHERE sex='{$sex}' AND uid in ({$in}) AND {$status} ORDER BY R DESC LIMIT {$limit}", $conn);
 		$ui = array();
 		while ($datum = mysql_fetch_assoc($res)) {
 			$n = json_decode($datum["name"], true);
@@ -620,15 +606,36 @@ function match_api($num=50, $login=true) {
 	global $conn;
 	global $oauth;
 	
-	$get = getIt($_GET);	
+	$meCupid = new meCupid($uid);
+	$fbook["me"] = $meCupid->user;
+	$get = getIt($_GET, $fbook["me"]["profile"]["status"]);
 	$frd = array();
-	$friends = array();
 	$ageIt = function($birthday) {
 		return floor((time() - strtotime($birthday))/31556926);
 	};
 	
+	$lock = false;	
+	$uids = array();
+	$friends = getFriends($uid);
+	//IF USER "LOCKS" uid
+	if (($_GET["uid"]!="" and $uid!=$_GET["uid"]) or $get["degree"]=="0") {
+		if ($get["degree"]=="0")
+			$suid = $uid;
+		else {
+			$suid = $_GET["uid"];
+			if (in_array($suid, $friends))
+				$uids[] = $suid;
+		}
+	
+		$res = mysql_query("SELECT fid, sex, json FROM cupidFriends WHERE fid='{$suid}'", $conn);
+		if (mysql_num_rows($res) > 0) {
+			$lock = mysql_fetch_assoc($res);
+			$lock["json"] = json_decode($lock["json"], true, 512);
+		}
+	}
+	
+
 	if ($login) {
-		$friends = getFriends($uid);
 		$in = "'".implode("','", $friends)."'";	
 		
 		//friends!  friends!
@@ -664,13 +671,13 @@ function match_api($num=50, $login=true) {
 		
 		if ($get["degree"]!=1) {
 			//grab least frequent ones
-			$uids = array();
 			$res = mysql_query("SELECT uid FROM cupidUser WHERE uid in ({$in}) ORDER BY voted LIMIT 3", $conn);
 			while ($data = mysql_fetch_assoc($res))
 				$uids[] = $data["uid"];
 			$res = mysql_query("SELECT uid FROM cupidUser WHERE uid in ({$in}) ORDER BY rand() LIMIT 2", $conn);
 			while ($data = mysql_fetch_assoc($res))
 				$uids[] = $data["uid"];
+				
 			$inU = "'".implode($uids, "', '")."'";
 
 			$res = mysql_query("SELECT keycat, value FROM json WHERE category='fql_profile' AND uid in ({$inU})", $conn);
@@ -703,22 +710,6 @@ function match_api($num=50, $login=true) {
 		}	
 	}
 
-	$lock = false;
-	
-	//IF USER "LOCKS" uid
-	if (($_GET["uid"]!="" and $uid!=$_GET["uid"]) or $get["degree"]=="0") {
-		if ($get["degree"]=="0")
-			$suid = $uid;
-		else
-			$suid = $_GET["uid"];
-	
-		$res = mysql_query("SELECT fid, sex, json FROM cupidFriends WHERE fid='{$suid}'", $conn);
-		if (mysql_num_rows($res) > 0) {
-			$lock = mysql_fetch_assoc($res);
-			$lock["json"] = json_decode($lock["json"], true, 512);
-		}
-	}
-	
 	$loc = array("male"=>array("male"=>0, "female"=>0), "female"=>array("male"=>0, "female"=>0));
 	$gdr = array("male", "female");
 
