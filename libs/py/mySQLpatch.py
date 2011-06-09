@@ -18,22 +18,23 @@ if 1==1:
 		db.close()
 
 	c.execute("UPDATE cupidUser SET voted=0, matched=0")
-	c.execute("SELECT cid, fid1,fid2 FROM cupidVote")
+	c.execute("SELECT cid,fid1,fid2,uid FROM cupidVote")
 
 	usrMatch = {}
 	allVotes = {}
 	for votes in c.fetchall():
-		if votes[0] not in usrMatch:
-			usrMatch[votes[0]] = 0
-		usrMatch[votes[0]]+=1
+		if votes[0]!=votes[3]: #only count votes that are not the same as user!
+			if votes[0] not in usrMatch:
+				usrMatch[votes[0]] = 0
+			usrMatch[votes[0]]+=1
 
-		if votes[1] not in allVotes:
-			allVotes[votes[1]] = 0
-		allVotes[votes[1]]+=1
-		
-		if votes[2] not in allVotes:
-			allVotes[votes[2]] = 0
-		allVotes[votes[2]]+=1	
+			if votes[1] not in allVotes:
+				allVotes[votes[1]] = 0
+			allVotes[votes[1]]+=1
+			
+			if votes[2] not in allVotes:
+				allVotes[votes[2]] = 0
+			allVotes[votes[2]]+=1	
 		
 	for k,v in usrMatch.items():
 		print k,v

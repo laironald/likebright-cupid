@@ -17,6 +17,7 @@ class elo {
 	public $fid1;
 	public $fid2;
 	public $uids = array();
+	public $table = "cupidRank";
 	
 	public function elo($uid, $cid, $fid1, $fid2) {
 		$conn = get_db_conn();
@@ -33,18 +34,22 @@ class elo {
 			$friends = getFriends($uid);
 			$this->adj = (in_array($fid1, $friends)?1 :0.5) * (in_array($fid2, $friends)?1 :0.5);
 		}
+		if ($uid == $cid) {
+			$this->table = "cupidRankM";
+		}
+		$table = $this->table;
 		
-		$query = "SELECT * FROM cupidRank WHERE uid='{$cid}' and fid IN ('{$fid1}', '{$fid2}')";
+		$query = "SELECT * FROM {$table} WHERE uid='{$cid}' and fid IN ('{$fid1}', '{$fid2}')";
 		$res = mysql_query($query, $conn);
 		while ($datum = mysql_fetch_assoc($res))
 			$this->uids[$datum["fid"]]["C"] = $datum;		
-		mysql_query("INSERT IGNORE INTO cupidRank (uid, fid) VALUES ('{$cid}', '{$fid1}'), ('{$cid}', '{$fid2}')", $conn);
+		mysql_query("INSERT IGNORE INTO {$table} (uid, fid) VALUES ('{$cid}', '{$fid1}'), ('{$cid}', '{$fid2}')", $conn);
 
-		$query = "SELECT * FROM cupidRank WHERE fid='{$cid}' and uid IN ('{$fid1}', '{$fid2}')";
+		$query = "SELECT * FROM {$table} WHERE fid='{$cid}' and uid IN ('{$fid1}', '{$fid2}')";
 		$res = mysql_query($query, $conn);
 		while ($datum = mysql_fetch_assoc($res))
 			$this->uids[$datum["cid"]]["R"] = $datum;
-		mysql_query("INSERT IGNORE INTO cupidRank (uid, fid) VALUES ('{$fid1}', '{$cid}'), ('{$fid2}', '{$cid}')", $conn);
+		mysql_query("INSERT IGNORE INTO {$table} (uid, fid) VALUES ('{$fid1}', '{$cid}'), ('{$fid2}', '{$cid}')", $conn);
 		
 		$query = "SELECT * FROM cupidRankAll WHERE uid IN ('{$fid1}', '{$fid2}')";
 		$res = mysql_query($query, $conn);
@@ -65,6 +70,7 @@ class elo {
 		$fid1 = $this->fid1;
 		$fid2 = $this->fid2;
 		$uids = $this->uids;
+		$table = $this->table;
 		$uids[$fid1]["S"] = ($win == $fid1)?1 :0;
 		$uids[$fid2]["S"] = ($win == $fid2)?1 :0;
 		
@@ -72,18 +78,18 @@ class elo {
 		$this->calc("R", $uids);
 		$this->calc("A", $uids);
 
-		$lambda = function($id, $cid, $uids) {
+		$lambda = function($id, $cid, $uids, $table) {
 			global $conn;
-			mysql_query("UPDATE  cupidRank a, cupidFriends b
+			mysql_query("UPDATE  {$table} a, cupidFriends b
 							SET  a.R={$uids[$id]["C"]["R"]}, a.W={$uids[$id]["C"]["W"]}, a.L={$uids[$id]["C"]["L"]}, a.T={$uids[$id]["C"]["T"]}, a.P={$uids[$id]["C"]["P"]}, a.sex=b.sex, a.name=b.name, a.status=b.status, a.pic=b.pic
 						  WHERE  a.uid='{$cid}' AND a.fid='{$id}' AND a.fid=b.fid", $conn);
-			mysql_query("UPDATE  cupidRank a, cupidFriends b
+			mysql_query("UPDATE  {$table} a, cupidFriends b
 							SET  a.R={$uids[$id]["R"]["R"]}, a.W={$uids[$id]["R"]["W"]}, a.L={$uids[$id]["R"]["L"]}, a.T={$uids[$id]["R"]["T"]}, a.P={$uids[$id]["R"]["P"]}, a.sex=b.sex, a.name=b.name, a.status=b.status, a.pic=b.pic
 						  WHERE  a.uid='{$id}' AND a.fid='{$cid}' AND a.fid=b.fid", $conn);
 			mysql_query("UPDATE  cupidRankAll a, cupidFriends b
 							SET  a.R={$uids[$id]["A"]["R"]}, a.W={$uids[$id]["A"]["W"]}, a.L={$uids[$id]["A"]["L"]}, a.T={$uids[$id]["A"]["T"]}, a.P={$uids[$id]["A"]["P"]}, a.sex=b.sex, a.name=b.name, a.status=b.status, a.pic=b.pic
 						  WHERE  a.uid='{$id}' AND a.uid=b.fid", $conn);
-			mysql_query("UPDATE  cupidRank SET R2=(3*R+{$uids[$id]["A"]["R"]})/4 WHERE fid in ('{$id}', '{$cid}')", $conn);
+			mysql_query("UPDATE  {$table} SET R2=(3*R+{$uids[$id]["A"]["R"]})/4 WHERE fid in ('{$id}', '{$cid}')", $conn);
 			
 			//UPDATE VOTED COUNT
 			$res = mysql_query("SELECT uid FROM cupidFriends WHERE fid='{$id}'", $conn);
@@ -91,13 +97,14 @@ class elo {
 			while($data = mysql_fetch_assoc($res))
 				$uids[] = $data["uid"];
 			$uids = "'".implode($uids, "', '")."'";
-			mysql_query("UPDATE cupidUser SET voted=voted+1 WHERE uid in ({$uids})", $conn);		
+			mysql_query("UPDATE cupidUser SET voted=voted+1 WHERE uid in ({$uids})", $conn);
 		};
-		$lambda($fid1, $cid, $uids);
-		$lambda($fid2, $cid, $uids);		
+		$lambda($fid1, $cid, $uids, $table);
+		$lambda($fid2, $cid, $uids, $table);		
 
 		//UPDATE MATCHED COUNT
-		mysql_query("UPDATE cupidUser SET matched=matched+1 WHERE uid='{$cid}'", $conn);		
+		if ($table == "cupidRank") //if table is not self!
+			mysql_query("UPDATE cupidUser SET matched=matched+1 WHERE uid='{$cid}'", $conn);		
 		
 		$this->uids = $uids;
 	}
@@ -138,9 +145,13 @@ class elo {
 		$EB = $QB / ($QA + $QB);
 		
 		//implement adjustable Rating floors?
-		//Adjustment factor... do you actually know this person?  If not friend NO -- 25% credible?
-		$uids[$fid1][$C]["R"] = round(max(100, $uids[$fid1][$C]["R"] + $this->adj * $this->KFactor($uids[$fid1][$C]["R"]) * ($uids[$fid1]["S"] - $EA)), 0);
-		$uids[$fid2][$C]["R"] = round(max(100, $uids[$fid2][$C]["R"] + $this->adj * $this->KFactor($uids[$fid2][$C]["R"]) * ($uids[$fid2]["S"] - $EB)), 0);
+		//Adjustment factor... do you actually know this person?  If not friend NO -- 25% credible?		
+		if ($C=="C" && $this->uid==$this->cid)
+			$adj = 1;
+		else
+			$adj = $this->adj;
+		$uids[$fid1][$C]["R"] = round(max(100, $uids[$fid1][$C]["R"] + $adj * $this->KFactor($uids[$fid1][$C]["R"]) * ($uids[$fid1]["S"] - $EA)), 0);
+		$uids[$fid2][$C]["R"] = round(max(100, $uids[$fid2][$C]["R"] + $adj * $this->KFactor($uids[$fid2][$C]["R"]) * ($uids[$fid2]["S"] - $EB)), 0);
 	}
 	//Internet KFactor
 	private function KFactor($fid) {
@@ -160,6 +171,7 @@ class meCupid {
 	public $uid;
 	public $user = array();
 	public $friends;
+	public $cntFriends;
 	
 	public function meCupid($uid, $scr=null, $data=null) {
 		if ($data==null)
@@ -170,10 +182,11 @@ class meCupid {
 		$data["profile"]["config"] = json_decode($data["profile"]["config"], true);
 		if ($data["profile"]["config"]==null)
 			$data["profile"]["config"] = array("0s"=>0, "0x"=>0, "1s"=>0, "1x"=>0, "2s"=>0, "2x"=>0);
+		$get = getIt($_GET);
 		if ($scr==null)
-			$data["screen"] = ((in_array($_GET["degree"], array("1", "2")))?$_GET["degree"]:"0").(($_GET["status"]=="x")?"x":"s");
+			$data["screen"] = $get["degree"].$get["status"];
 		else
-			$data["screen"] = $src;
+			$data["screen"] = $scr;
 			
 		if ($data["profile"]["config"][$data["screen"]]=="")
 			$data["profile"]["config"][$data["screen"]]=0;
@@ -190,20 +203,51 @@ class meCupid {
 		mysql_query(sprintf("UPDATE cupidUser SET matches=matches+1, config='%s' WHERE uid={$this->uid}", 
 			json_encode($this->user["profile"]["config"])), $conn);		
 	}
-	public function top_matches($uid=NULL, $LIMIT=6) {
+	public function cntFriends() {
+		$friends = $this->friends;
+		$in = "'".implode("','", $friends)."'";	
+	
+		$conn = get_db_conn();
+		if ($_GET["secret"]!="" and ($uid=="211897" or $uid=="2203233"))
+			$res = mysql_query("SELECT count(*) AS cnt FROM cupidUser", $conn);
+		else
+			$res = mysql_query("SELECT count(*) AS cnt FROM cupidUser WHERE uid in ({$in})", $conn);
+		$cntFriends = mysql_fetch_assoc($res);
+		$cntFriends = $cntFriends["cnt"];
+		
+		$this->cntFriends = $cntFriends;
+		return $cntFriends;
+	}
+	public function top_matches($get=NULL, $uid=NULL, $LIMIT=6) {
 		if ($uid==NULL)
 			$uid = $this->uid;
 			
 		$mc = new Memcache2;
 		$mc->connect('localhost', 11211);
-		$mckey = "{$uid}|top_matches|{$LIMIT}";
+		$mckey = "{$uid}|top_matches|{$get["status"]}|{$get["degree"]}|{$LIMIT}";
 		$mcval = $mc->toggle($mckey);
 		//$mc->flush();
 		if ($mcval != false) {
 			$match_your = json_decode($mcval, true);
 		} else {
 			$conn = get_db_conn();
-			$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
+			
+			if ($get["status"]=="x")
+				//$status = "status in ('Single', '')";
+				$status = "status in ('')";
+			elseif ($get["status"]=="s")
+				$status = "status='Single'";
+			else
+				$status = "status not in ('Single', '')";
+
+						
+			if ($get["degree"]==0)
+				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND P>50 AND {$status} ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
+			else {
+				$friends = getFriends($uid, $get["degree"], false);
+				$in = "'".implode("','", $friends)."'";	
+				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$uid}' AND fid in ({$in}) AND P>50 AND {$status} ORDER BY R2 DESC LIMIT {$LIMIT}", $conn);
+			}
 			$match_your = array();	
 			resUser($match_your, $res);		
 			$mc->toggle($mckey, json_encode($match_your), 15*60);

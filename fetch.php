@@ -22,6 +22,9 @@ if ($session) {
 }
 $conn = get_db_conn();
 
+
+$get = getIt($_GET);
+
 $smarty = new Smarty();
 $smarty->force_compile = true;
 $smarty->setTemplateDir( 'libs/smarty/templates');
@@ -32,6 +35,13 @@ $smarty->plugins_dir[] = 'libs/php';
 $smarty->caching = false;
 $smarty->cache_lifetime = 0;
 $smarty->assign("ie", using_ie());
+$smarty->assign("get", $get);
+
+$url["degree"] = (in_array($get["degree"], array("0", "1", "2")))?"&degree={$get["degree"]}":"";
+$url["status"] = (in_array($get["status"], array("s", "x", "a")))?"&status={$get["status"]}":"";
+$url["gender"] = (in_array($get["gender"], array("m", "f")))?"&gender={$get["gender"]}":"";
+$url["all"] = "{$url["degree"]}{$url["status"]}{$url["gender"]}";
+$smarty->assign("url", $url);
 
 /***************************************************************/
 
@@ -39,10 +49,11 @@ $fbook = array();
 if ($session) {
 	$oauth = $session['access_token'];
 	$display = true;
-	if ($_GET['q']=="match")
+	if ($_GET['q']=="match") {
+	
 		echo json_encode(match_api(25), JSON_HEX_APOS);
-	//ADD SOME SORT OF SECURITY HERE PROBABLY...WILL PEOPLE WANT TO MANIPULATE VOTES?
-	elseif ($_GET["q"]=="vote" && isset($_POST["c"]) && isset($_POST["m1"]) && isset($_POST["m2"]) && isset($_POST["vote"])) {
+		//ADD SOME SORT OF SECURITY HERE PROBABLY...WILL PEOPLE WANT TO MANIPULATE VOTES?
+	} elseif ($_GET["q"]=="vote" && isset($_POST["c"]) && isset($_POST["m1"]) && isset($_POST["m2"]) && isset($_POST["vote"])) {
 	
 		$cid = $_POST["c"];
 		if ($_POST["m1"]<$_POST["m2"]) {
@@ -79,8 +90,8 @@ if ($session) {
 			$rank->skip();
 		}
 		$rank->pct();
-		echo json_encode(array($reg[0]=>0.50*$rank->uids[$m1]["C"]["E"]+0.50*$rank->uids[$m1]["A"]["E"],
-							   $reg[1]=>0.50*$rank->uids[$m2]["C"]["E"]+0.50*$rank->uids[$m2]["A"]["E"],
+		echo json_encode(array($reg[0]=>0.75*$rank->uids[$m1]["C"]["E"]+0.25*$rank->uids[$m1]["A"]["E"],
+							   $reg[1]=>0.75*$rank->uids[$m2]["C"]["E"]+0.25*$rank->uids[$m2]["A"]["E"],
 							   "v"=>$rank->uids[$m1]["C"]["T"]+$rank->uids[$m2]["C"]["T"]+
 									$rank->uids[$m1]["A"]["T"]+$rank->uids[$m2]["A"]["T"]));
 	}
@@ -97,7 +108,21 @@ if ($session) {
 			$display = false;
 		
 		if ($display) {
-			$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$useID}' AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
+			if ($get["status"]=="x")
+				//$status = "status in ('Single', '')";
+				$status = "status in ('')";
+			elseif ($get["status"]=="s")
+				$status = "status='Single'";
+			else
+				$status = "status not in ('Single', '')";
+		
+			if ($get["degree"]==0)
+				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$useID}' AND {$status} AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
+			else {
+				$flist = getFriends($uid, $get["degree"], false);
+				$in = "'".implode("','", $flist)."'";
+				$res = mysql_query("SELECT fid as uid, pic, name FROM cupidRank WHERE uid='{$useID}' AND fid in ({$in}) AND {$status} AND P>50 ORDER BY R2 DESC LIMIT 50", $conn);
+			}
 			$match_tops = array();
 			while ($data = mysql_fetch_assoc($res)) {
 				$data["name"] = json_decode($data["name"], true);
@@ -124,20 +149,18 @@ if ($session) {
 		if ($_GET["sex"]=="")
 			$smarty->assign("fbook", $fbook);
 
-		if ($fbook["me"]["profile"]["config"][$fbook["me"]["screen"]] >= 10) {
-			if ($_GET["sex"]=="")
-				$match_tops = array("male"=>match_tops($friends, "male", 5), "female"=>match_tops($friends, "female", 5));	
-		}
-		if ($_GET["sex"]=="male")
+		if ($_GET["sex"]=="")
+			$match_tops = array("male"=>match_tops($friends, "male", 5), "female"=>match_tops($friends, "female", 5));	
+		elseif ($_GET["sex"]=="male")
 			$match_tops = array("item"=>match_tops($friends, "male", 50));	
 		elseif ($_GET["sex"]=="female")
 			$match_tops = array("item"=>match_tops($friends, "female", 50));
 		$smarty->assign("match_tops", $match_tops);
 
 		/* GET USER's MATCHES */
-		if ($fbook["me"]["profile"]["matches"] >= 40)
-			$smarty->assign("match_your", $meCupid->top_matches());
+		$smarty->assign("match_your", $meCupid->top_matches($get));
 		$smarty->assign("matchlistOK", $matchlistOK);		
+		$smarty->assign("friendCnt", $meCupid->cntFriends());
 		$smarty->display('matchtops.tpl');
 	}
 	elseif ($_GET["q"]=="friendlist") {
@@ -171,7 +194,20 @@ if ($session) {
 	
 	if ($display)
 		echo " ";
-} else {
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+else {
 	if ($_GET["q"]=="vote" && isset($_POST["c"]) && isset($_POST["m1"]) && isset($_POST["m2"]) && isset($_POST["vote"])) {	
 		$uid = 0;
 		$cid = $_POST["c"];

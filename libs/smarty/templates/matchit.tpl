@@ -81,10 +81,14 @@
 					<div class="clear"></div>
 					<div class="grid_2 alpha omega votemore">
 						{if $fbook.me}
-							{if !$smarty.get.uid}
-								<a href="?uid={$match[0].c.uid}{$url.all}">Vote more for<br/>{$match[0].c.name}</a>
+							{if $get.degree!="0"}
+								{if !$smarty.get.uid}
+									<a href="?uid={$match[0].c.uid}{$url.all}">Vote more for<br/>{$match[0].c.name}</a>
+								{else}
+									<a href="?{$url.all}">Vote for Everyone</a>							
+								{/if}
 							{else}
-								<a href="?{$url.all}">Vote for Everyone</a>							
+								<a href="?{$url.all}"></a>							
 							{/if}
 						{/if}
 					</div>
@@ -152,9 +156,9 @@
 		{else}
 			<div class="grid_6 alpha omega divide">
 				<div class="title">Make your vote count! <a href="{$fbook.login}">Connect with Facebook.</a></div>
-				<img src="images/famfamfam/icons/help.png" /> Play matchmaker with your Facebook friends! <br />
+				<img src="images/famfamfam/icons/help.png" /> Introduce your Facebook friends! <br />
 				<img src="images/famfamfam/icons/group.png" /> Discover which friends are frequently matched! <br />
-				<img src="images/famfamfam/icons/heart.png" /> Learn who your friends think you should date! <br />
+				<img src="images/famfamfam/icons/emoticon_smile.png" /> Learn who your friends think is right for you! <br />
 				<img src="images/famfamfam/icons/shield.png" /> Your votes are anonymous... have fun! <br />
 				<div class="bigfont">
 					We will <b>never post</b> anything<br/>without asking you first. <b>Ever.</b> 
@@ -177,6 +181,7 @@
 				<div class="social">
 					<a target="_blank" href="https://www.facebook.com/pages/cupid/220089028018633"><img src="images/icon-dock/facebook.png" title="Like!"></a>
 					<a target="_blank" href="http://www.twitter.com/likebright1"><img src="images/icon-dock/twitter-2.png" title="Follow!"></a>
+					<a target="_blank" href="http://blog.likebright.com"><img src="images/icon-dock/tumblr.png" title="Read!"></a>
 					<a target="_blank" href="http://www.youtube.com/likebright1"><img src="images/icon-dock/youtube.png" title="Watch!"></a>
 					<a target="_blank" href="https://github.com/laironald/likebright-cupid"><img src="images/icon-dock/github.png" title="Fork!"></a>
 				</div>
@@ -205,7 +210,7 @@
 					<div class="famfamfam">
 						<img src="images/famfamfam/icons/help.png" />
 						<img src="images/famfamfam/icons/group.png" />
-						<img src="images/famfamfam/icons/heart.png" />
+						<img src="images/famfamfam/icons/emoticon_smile.png" />
 						<img src="images/famfamfam/icons/new.png" />
 						<img src="images/famfamfam/icons/lock.png" />
 						<img src="images/famfamfam/icons/shield.png" />

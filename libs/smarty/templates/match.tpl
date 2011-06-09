@@ -6,8 +6,8 @@
 {assign var='ron' value=($fbook.uid=="2203233")}
 {if $ron}{$fbook.me.profile.email}{/if}
 <head>
-  <meta property="og:title" content="cupid" />
-  <meta property="og:description" content="Play matchmaker and learn who your friends think you should date!" />
+  <meta property="og:title" content="meet someone new" />
+  <meta property="og:description" content="Play likebright and learn who your friends think is right for you!" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="http://likebright.com/cupid/" />
   <meta property="og:image" content="http://likebright.com/cupid/images/likebright-square-big.jpg" />
@@ -40,24 +40,22 @@
 			</div>
 			{if $fbook.me}
 				<div class="boxy gadd">
-				{if $fbook.uid==2203233}
-					<a href="?degree=0{$url.status}" {if $smarty.get.degree!=2 and $smarty.get.degree!=1}class="select"{/if}>me</a>
-					<a href="?degree=1{$url.status}" {if $smarty.get.degree==1}class="select"{/if}>friends</a>
-					<a href="?degree=2{$url.status}" {if $smarty.get.degree==2}class="select"{/if}>+friends of friends</a>
-				{else}
-					<a href="?degree=1{$url.status}" {if $smarty.get.degree!=2}class="select"{/if}>friends</a>
-					<a href="?degree=2{$url.status}" {if $smarty.get.degree==2}class="select"{/if}>+friends of friends</a>
-				{/if}
+					<a href="?degree=0{$url.status}" {if $get.degree==0}class="select"{/if}>me</a>
+					<a href="?degree=1{$url.status}" {if $get.degree==1}class="select"{/if}>friends</a>
+					<a href="?degree=2{$url.status}" {if $get.degree==2}class="select"{/if}>+friends of friends</a>
 				</div>
 				<div class="boxy gadd">
-					<a href="?status=s{$url.degree}" {if $smarty.get.status!="x"}class="select"{/if}>single</a>
-					<a href="?status=x{$url.degree}" {if $smarty.get.status=="x"}class="select"{/if}>+unknown</a>
+					<a href="?status=s{$url.degree}" {if $get.status=="s"}class="select"{/if}>single</a>
+					<a href="?status=x{$url.degree}" {if $get.status=="x"}class="select"{/if}>+unknown</a>
+					<a href="?status=a{$url.degree}" {if $get.status=="a"}class="select"{/if}>all</a>
 				</div>
-				<div class="boxy gadd">
-					<a href="?gender=a{$url.degree}{$url.status}" {if $smarty.get.gender!="m" && $smarty.get.gender!="f"}class="select"{/if}>all</a>
-					<a href="?gender=m{$url.degree}{$url.status}" {if $smarty.get.gender=="m"}class="select"{/if}>male</a>
-					<a href="?gender=f{$url.degree}{$url.status}" {if $smarty.get.gender=="f"}class="select"{/if}>female</a>
-				</div>
+				{*
+					<div class="boxy gadd">
+						<a href="?gender=a{$url.degree}{$url.status}" {if $get.gender==""}class="select"{/if}>all</a>
+						<a href="?gender=m{$url.degree}{$url.status}" {if $get.gender=="m"}class="select"{/if}>male</a>
+						<a href="?gender=f{$url.degree}{$url.status}" {if $get.gender=="f"}class="select"{/if}>female</a>
+					</div>
+				*}
 			{/if}
 		</div>
 		{if not $fbook.me}
@@ -147,8 +145,6 @@
 			query.wait(function(rows) {
 				alert(JSON.stringify(rows));
 			});
-		
-		
 		{/if}
 		
 		{if $fbook.me}
@@ -253,7 +249,7 @@
 					if (vote!=0) {
 						$.ajax({
 							type: "GET",
-							url: "fetch.php?q=matchtops&status={$smarty.get.status}&degree={$smarty.get.degree}",
+							url: "fetch.php?q=matchtops&status={$get.status}&degree={$get.degree}",
 							success: function(data) {
 								$("#matchtops").html(data);
 							}
@@ -267,7 +263,7 @@
 			if (vote==0)
 				$.ajax({
 					type: "GET",
-					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
+					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&status={$get.status}&degree={$get.degree}",
 					success: function(data) {
 						$("#button").show();
 						$("#button").html(data);
@@ -276,7 +272,7 @@
 			else
 				$.ajax({
 					type: "GET",
-					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&m="+match[pos]["m"+vote]["uid"]+"&status={$smarty.get.status}&degree={$smarty.get.degree}",
+					url: "fetch.php?q=matchbutton&c="+match[pos]["c"]["uid"]+"&m1="+match[pos]["m1"]["uid"]+"&m2="+match[pos]["m2"]["uid"]+"&m="+match[pos]["m"+vote]["uid"]+"&status={$get.status}&degree={$get.degree}",
 					success: function(data) {
 						$("#button").show();
 						$("#button").html(data);
@@ -341,10 +337,10 @@
 		$("#mpic2 .name").html(match[pos]["m2"]["name"]);
 		
 		{if $fbook.me}
-			{if !$smarty.get.uid}
-				$("#cpic .img").attr("src", match[pos]["c"]["pic"]);
-				$("#cpic .img").attr("title", "Vote more for "+match[pos]["c"]["name"]);
-				$("#cpic a").attr("href", "?uid="+match[pos]["c"]["uid"]+"{$url.all}");
+			$("#cpic .img").attr("src", match[pos]["c"]["pic"]);
+			$("#cpic .img").attr("title", "Vote more for "+match[pos]["c"]["name"]);
+			$("#cpic a").attr("href", "?uid="+match[pos]["c"]["uid"]+"{$url.all}");
+			{if $get.degree!="0"}
 				$(".votemore a").html("Vote more for<br/>"+match[pos-1]["c"]["name"]);
 				$(".votemore a").attr("href", "?uid="+match[pos-1]["c"]["uid"]+"{$url.all}");
 			{/if}

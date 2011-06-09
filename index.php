@@ -34,13 +34,19 @@ if ($session) {
 
 $smarty = new Smarty();
 $smarty->force_compile = true;
+$smarty->debugging = false;
 $smarty->setTemplateDir( 'libs/smarty/templates');
 $smarty->setCompileDir(  'libs/smarty/templates_c');
 $smarty->setCacheDir(    'libs/smarty/cache');
 $smarty->setConfigDir(   'libs/smarty/configs');
 $smarty->plugins_dir[] = 'libs/php';
+$smarty->caching = false;
+$smarty->cache_lifetime = 120;
 $smarty->assign("facebook", $facebook);
 $smarty->assign("ie", using_ie());
+
+$get = getIt($_GET);
+$smarty->assign("get", $get);
 
 $fbook = array("session"=> 	json_encode($session),
 			   "me"		=>  $me,
@@ -68,15 +74,13 @@ if (isset($session)) {
 	$smarty->assign("matchJSON", json_encode($match, JSON_HEX_APOS));
 	$smarty->assign("match", $match);
 
-	if ($fbook["me"]["profile"]["config"][$fbook["me"]["screen"]] >= 10 or $_GET["secret"]!="" or $_GET["vote"]>=10) {
-		$match_tops = array("male"=>match_tops($friends, "male", 5), "female"=>match_tops($friends, "female", 5));	
-		$smarty->assign("match_tops", $match_tops);
-	}
-	
-	if ($fbook["me"]["profile"]["matches"] >= 40 or $_GET["secret"]!="" or $_GET["tvote"]>=40)
-		$smarty->assign("match_your", $meCupid->top_matches());
+	$match_tops = array("male"=>match_tops($friends, "male", 5), "female"=>match_tops($friends, "female", 5));	
+	$smarty->assign("match_tops", $match_tops);
+	$smarty->assign("match_your", $meCupid->top_matches($get));
+	$smarty->assign("friendCnt", $meCupid->cntFriends());
 
 	//friends!  friends!
+	/*
 	$friends = getFriends($uid);
 	$in = "'".implode("','", $friends)."'";	
 	
@@ -84,6 +88,8 @@ if (isset($session)) {
 		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser", $conn);
 	else
 		$res = mysql_query("SELECT name, uid, pic, status FROM cupidUser WHERE uid in ({$in})", $conn);
+	*/
+	
 
 	/* //HIDE WINGS 
 	if (mysql_num_rows($res) > 0) {
@@ -103,9 +109,11 @@ if (isset($session)) {
 		$smarty->assign("wings", $frd);
 	}
 	*/
-	$url["degree"] = (in_array($_GET["degree"], array("0", "1", "2")))?"&degree={$_GET["degree"]}":"";
-	$url["status"] = (in_array($_GET["status"], array("s", "x")))?"&status={$_GET["status"]}":"";
-	$url["gender"] = (in_array($_GET["gender"], array("m", "f")))?"&gender={$_GET["gender"]}":"";
+	
+	
+	$url["degree"] = (in_array($get["degree"], array("0", "1", "2")))?"&degree={$get["degree"]}":"";
+	$url["status"] = (in_array($get["status"], array("s", "x", "a")))?"&status={$get["status"]}":"";
+	$url["gender"] = (in_array($get["gender"], array("m", "f")))?"&gender={$get["gender"]}":"";
 	$url["all"] = "{$url["degree"]}{$url["status"]}{$url["gender"]}";
 	$smarty->assign("url", $url);
 	
@@ -117,6 +125,4 @@ if (isset($session)) {
 
 
 $smarty->assign("fbook", $fbook);
-$smarty->caching = false;
-$smarty->cache_lifetime = 0;
 $smarty->display('match.tpl');
